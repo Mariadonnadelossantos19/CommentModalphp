@@ -96,6 +96,7 @@ function formatDate($date) {
         .comment-details {
             flex: 1;
             overflow: hidden;
+            position: relative;
         }
 
         .comment-user {
@@ -110,6 +111,18 @@ function formatDate($date) {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-right: 65px;
+        }
+
+        .comment-date {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 10px;
+            color: #adb5bd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            background-color: rgba(108, 117, 125, 0.7);
         }
 
         /* Modal styles */
@@ -169,6 +182,7 @@ function formatDate($date) {
                     <div class="comment-details">
                         <div class="comment-user"><?php echo htmlspecialchars($lastComment['user_name']); ?></div>
                         <div class="comment-text"><?php echo htmlspecialchars($lastComment['cmt_content']); ?></div>
+                        <div class="comment-date"><?php echo formatDate($lastComment['created_at']); ?></div>
                     </div>
                 </div>
             <?php else: ?>
