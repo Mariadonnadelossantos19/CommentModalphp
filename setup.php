@@ -1,4 +1,18 @@
 <?php
+/*
+* setup.php
+* 
+* Ito ang file na ginagamit para sa initial setup ng database.
+* - Gumagawa ng users table
+* - Naglalagay ng test user para sa testing
+* - Kailangan lang patakbuhin ito one time para ma-setup ang database
+* - Naka-comment out na ito para hindi na magamit ulit
+*
+* Konektado sa:
+* - config/database.php (para sa database connection)
+* - register.php (pareho silang gumagawa ng users)
+*/
+
 require_once 'config/database.php';
 
 try {
@@ -25,4 +39,4 @@ try {
     echo "Setup completed successfully!";
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
-} 
+}

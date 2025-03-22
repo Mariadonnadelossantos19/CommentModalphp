@@ -1,4 +1,16 @@
 <?php
+/*
+* config/database.php
+*
+* Ito ang database configuration file
+* - May database credentials
+* - Nag-establish ng PDO connection
+* - Central point ng database access
+*
+* Konektado sa:
+* - Lahat ng files na need ng database access
+* - .env (para sa database credentials)
+*/
 $db_host = 'localhost';
 $db_name = 'commentmodal_db';
 $db_user = 'root';

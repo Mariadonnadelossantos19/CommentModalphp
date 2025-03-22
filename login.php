@@ -1,4 +1,17 @@
 <?php
+/*
+* login.php
+*
+* Ito ang login page ng system
+* - Nag-hahandle ng user authentication
+* - Nag-create ng session para sa logged in user
+* - May form validation
+* 
+* Konektado sa:
+* - config/database.php (para sa database connection)
+* - comments.php (redirect after login)
+* - register.php (link para sa registration)
+*/
 session_start();
 require_once 'config/database.php';
 

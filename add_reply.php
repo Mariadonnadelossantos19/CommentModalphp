@@ -1,4 +1,16 @@
 <?php
+/*
+* add_reply.php
+*
+* Ito ang processor ng replies sa comments
+* - Nag-hahandle ng POST request galing sa reply forms
+* - Nag-sasave ng reply sa database
+* - May parent-child relationship sa comments
+*
+* Konektado sa:
+* - comments.php (source ng form data)
+* - config/database.php (para sa database)
+*/
 session_start();
 require_once 'config/database.php';
 

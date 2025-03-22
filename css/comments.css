@@ -178,27 +178,87 @@ textarea:focus {
 .modal {
     display: none;
     position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
 }
 
 .modal-content {
-    background: var(--light-color);
+    background: white;
     width: 90%;
     max-width: 400px;
-    margin: 100px auto;
-    padding: 1.5rem;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.modal-icon {
+    width: 60px;
+    height: 60px;
+    background: #FFF3F3;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.exclamation {
+    color: #FF6B6B;
+    font-size: 32px;
+    font-weight: bold;
 }
 
 .modal-title {
+    color: #4A4A4A;
     font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 0.5rem;
+    margin: 0 0 1.5rem;
+    font-weight: 500;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.btn-cancel, .btn-delete {
+    min-width: 120px;
+    padding: 0.75rem 2rem;
+    font-size: 14px;
+}
+
+.btn-cancel {
+    background: #E9ECEF;
+    color: #4A4A4A;
+}
+
+.btn-delete {
+    background: #DC3545;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #DDE2E6;
+}
+
+.btn-delete:hover {
+    background: #C82333;
 }
 
 /* Toast notification */
@@ -254,4 +314,19 @@ textarea:focus {
     .modal-content {
         margin: 50px auto;
     }
-} 
+}
+
+/*
+* css/comments.css
+*
+* Ito ang stylesheet ng comment system
+* - Layout at design ng comments
+* - Responsive design
+* - Custom styling para sa forms
+* - Animation effects
+*
+* Konektado sa:
+* - comments.php (main interface)
+* - login.php (login form styling)
+* - register.php (registration form styling)
+*/ 

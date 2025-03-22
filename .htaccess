@@ -1,0 +1,12 @@
+# .htaccess
+#
+# Ito ang Apache configuration file
+# - Nag-protect sa setup.php para hindi ma-access
+# - Security measure para sa sensitive files
+#
+# Konektado sa:
+# - setup.php (para i-restrict ang access)
+<Files "setup.php">
+    Order Allow,Deny
+    Deny from all
+</Files> 

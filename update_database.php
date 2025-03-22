@@ -1,4 +1,16 @@
 <?php
+/*
+* update_database.php
+*
+* Ito ang utility script para sa database updates
+* - Para sa mga database schema changes
+* - Nag-add ng new columns kung kailangan
+* - Para sa system upgrades
+*
+* Konektado sa:
+* - config/database.php (para sa database connection)
+* - database.sql (source ng schema updates)
+*/
 require_once 'config/database.php';
 
 try {

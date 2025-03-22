@@ -1,4 +1,17 @@
 <?php
+/*
+* update_comment.php
+*
+* Ito ang processor para sa pag-update ng comments
+* - Nag-hahandle ng edit requests
+* - Nag-validate ng user permissions
+* - Nag-update ng comment content at attachments
+*
+* Konektado sa:
+* - comments.php (source ng edit requests)
+* - config/database.php (para sa database)
+* - uploads folder (para sa attachments)
+*/
 session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

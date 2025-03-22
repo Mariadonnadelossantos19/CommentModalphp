@@ -1,4 +1,20 @@
 <?php
+/*
+* comments.php
+*
+* Ito ang main page ng comment system
+* - Nagpapakita ng comment form
+* - Nagpapakita ng listahan ng comments at replies
+* - May user authentication
+* - May upload feature para sa attachments
+* 
+* Konektado sa:
+* - add_comment.php (para mag-add ng comment)
+* - add_reply.php (para mag-add ng reply)
+* - delete_comment.php (para mag-delete ng comment)
+* - config/database.php (para sa database connection)
+* - js/comments.js (para sa frontend functionality)
+*/
 session_start();
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
@@ -51,6 +67,96 @@ function getReplies($db, $comment_id) {
     $stmt->execute([$comment_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Add this function near the top of the file after require_once
+function ensureDirectoriesExist() {
+    $dirs = [
+        'assets/images',
+        'uploads',
+        'uploads/avatars',
+        'uploads/attachments'
+    ];
+    
+    foreach ($dirs as $dir) {
+        if (!file_exists($dir)) {
+            mkdir($dir, 0755, true);
+        }
+    }
+}
+
+// Enhance the avatar path handling function
+function getAvatarPath($avatar) {
+    ensureDirectoriesExist();
+    
+    $default_avatar = 'assets/images/default-avatar.png';
+    
+    // Create default avatar if it doesn't exist
+    if (!file_exists($default_avatar)) {
+        // Create a simple default avatar or copy from another location
+        copy('path/to/backup/default-avatar.png', $default_avatar);
+    }
+    
+    if (empty($avatar)) {
+        return $default_avatar;
+    }
+    
+    $avatar_path = "uploads/avatars/" . $avatar;
+    return file_exists($avatar_path) ? $avatar_path : $default_avatar;
+}
+
+// Add this function to help with file security
+function isValidFileUpload($file) {
+    $allowed_types = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    $max_size = 5 * 1024 * 1024; // 5MB
+    
+    if (!in_array($file['type'], $allowed_types)) {
+        return false;
+    }
+    
+    if ($file['size'] > $max_size) {
+        return false;
+    }
+    
+    return true;
+}
+
+// Add these utility functions
+function formatDate($date) {
+    $timestamp = strtotime($date);
+    return date('M j, Y g:i A', $timestamp);
+}
+
+function truncateText($text, $length = 100) {
+    if (strlen($text) <= $length) {
+        return $text;
+    }
+    return substr($text, 0, $length) . '...';
+}
+
+// Add this near the top of the file
+function generateCSRFToken() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// Add this near the top
+if (isset($_SESSION['flash_message'])) {
+    echo '<div class="alert alert-' . $_SESSION['flash_type'] . '">' . 
+         htmlspecialchars($_SESSION['flash_message']) . 
+         '</div>';
+    unset($_SESSION['flash_message']);
+    unset($_SESSION['flash_type']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -63,7 +169,7 @@ function getReplies($db, $comment_id) {
     <div class="navbar">
         <div class="container">
             <div class="user-info">
-                <img src="uploads/avatars/<?php echo htmlspecialchars($_SESSION['avatar'] ?? 'default-avatar.png'); ?>" class="avatar" alt="User avatar">
+                <img src="<?php echo getAvatarPath($_SESSION['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
                 Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!
             </div>
             <div class="nav-actions">
@@ -77,6 +183,7 @@ function getReplies($db, $comment_id) {
             <div class="add-comment-section">
                 <form action="add_comment.php" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="cmt_fnd_id" value="1">
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     <textarea name="cmt_content" class="comment-content" placeholder="Write your comment..."></textarea>
                     <div class="comment-actions">
                         <input type="file" name="cmt_attachment" class="upload-attachment" accept="image/*,.pdf,.doc,.docx">
@@ -98,10 +205,10 @@ function getReplies($db, $comment_id) {
                                 <!-- Parent Comment -->
                                 <div class="comment-header">
                                     <div class="user-info">
-                                        <img src="uploads/avatars/<?php echo htmlspecialchars($comment['avatar'] ?? 'default-avatar.png'); ?>" class="avatar" alt="User avatar">
+                                        <img src="<?php echo getAvatarPath($comment['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
                                         <span class="user-name"><?php echo htmlspecialchars($comment['user_name']); ?></span>
                                     </div>
-                                    <span class="comment-date"><?php echo $comment['created_at']; ?></span>
+                                    <span class="comment-date"><?php echo formatDate($comment['created_at']); ?></span>
                                 </div>
                                 <div class="comment-text"><?php echo htmlspecialchars($comment['cmt_content']); ?></div>
                                 <?php if($comment['cmt_attachment']): ?>
@@ -121,6 +228,7 @@ function getReplies($db, $comment_id) {
                                 <div class="reply-form" style="display: none;">
                                     <form action="add_reply.php" method="POST" enctype="multipart/form-data">
                                         <input type="hidden" name="parent_id" value="<?php echo $comment['cmt_id']; ?>">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                                         <textarea name="cmt_content" class="reply-content" placeholder="Write your reply..."></textarea>
                                         <div class="reply-actions">
                                             <input type="file" name="cmt_attachment" class="upload-reply" accept="image/*,.pdf,.doc,.docx">
@@ -140,10 +248,10 @@ function getReplies($db, $comment_id) {
                                             <div class="reply-content">
                                                 <div class="reply-header">
                                                     <div class="user-info">
-                                                        <img src="uploads/avatars/<?php echo htmlspecialchars($reply['avatar'] ?? 'default-avatar.png'); ?>" class="avatar" alt="User avatar">
+                                                        <img src="<?php echo getAvatarPath($reply['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
                                                         <span class="user-name"><?php echo htmlspecialchars($reply['user_name']); ?></span>
                                                     </div>
-                                                    <span class="reply-date"><?php echo $reply['created_at']; ?></span>
+                                                    <span class="reply-date"><?php echo formatDate($reply['created_at']); ?></span>
                                                 </div>
                                                 <div class="reply-text"><?php echo htmlspecialchars($reply['cmt_content']); ?></div>
                                                 <?php if($reply['cmt_attachment']): ?>
@@ -165,6 +273,7 @@ function getReplies($db, $comment_id) {
                                                 <div class="reply-form nested-reply-form" style="display: none;">
                                                     <form action="add_reply.php" method="POST" enctype="multipart/form-data">
                                                         <input type="hidden" name="parent_id" value="<?php echo $reply['cmt_id']; ?>">
+                                                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                                                         <textarea name="cmt_content" class="reply-content" placeholder="Write your reply..."></textarea>
                                                         <div class="reply-actions">
                                                             <input type="file" name="cmt_attachment" class="upload-reply" accept="image/*,.pdf,.doc,.docx">
@@ -184,10 +293,10 @@ function getReplies($db, $comment_id) {
                                                             <div class="reply-content">
                                                                 <div class="reply-header">
                                                                     <div class="user-info">
-                                                                        <img src="uploads/avatars/<?php echo htmlspecialchars($nested_reply['avatar'] ?? 'default-avatar.png'); ?>" class="avatar" alt="User avatar">
+                                                                        <img src="<?php echo getAvatarPath($nested_reply['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
                                                                         <span class="user-name"><?php echo htmlspecialchars($nested_reply['user_name']); ?></span>
                                                                     </div>
-                                                                    <span class="reply-date"><?php echo $nested_reply['created_at']; ?></span>
+                                                                    <span class="reply-date"><?php echo formatDate($nested_reply['created_at']); ?></span>
                                                                 </div>
                                                                 <div class="reply-text"><?php echo htmlspecialchars($nested_reply['cmt_content']); ?></div>
                                                                 <?php if($nested_reply['cmt_attachment']): ?>
@@ -223,15 +332,13 @@ function getReplies($db, $comment_id) {
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Delete Confirmation</h3>
+            <div class="modal-icon">
+                <i class="exclamation">!</i>
             </div>
-            <div class="modal-body">
-                Are you sure you want to delete this comment?
-            </div>
-            <div class="modal-footer">
-                <button class="btn" id="cancelDelete">Cancel</button>
-                <button class="btn delete-comment" id="confirmDelete">Delete</button>
+            <h3 class="modal-title">Are you sure you want to delete this comment?</h3>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelDelete">Cancel</button>
+                <button class="btn btn-delete" id="confirmDelete">Delete</button>
             </div>
         </div>
     </div>

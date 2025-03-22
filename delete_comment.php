@@ -1,4 +1,16 @@
 <?php
+/*
+* delete_comment.php
+*
+* Ito ang processor para sa pag-delete ng comments
+* - Nag-hahandle ng delete requests
+* - Nag-checheck ng user permissions
+* - Nag-dedelete din ng related replies
+*
+* Konektado sa:
+* - comments.php (source ng delete request)
+* - config/database.php (para sa database)
+*/
 require_once 'config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

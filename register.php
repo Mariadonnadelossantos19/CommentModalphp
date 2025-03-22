@@ -1,4 +1,17 @@
 <?php
+/*
+* register.php
+*
+* Ito ang registration page para sa mga bagong users
+* - May registration form
+* - Nag-validate ng user input
+* - Nag-hash ng password
+* - Nag-create ng bagong user sa database
+*
+* Konektado sa:
+* - config/database.php (para sa database)
+* - login.php (redirect after registration)
+*/
 session_start();
 require_once 'config/database.php';
 

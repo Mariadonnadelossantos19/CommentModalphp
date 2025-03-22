@@ -1,4 +1,17 @@
 <?php
+/*
+* add_comment.php
+*
+* Ito ang processor ng bagong comments
+* - Nag-hahandle ng POST request galing sa comment form
+* - Nag-sasave ng comment sa database
+* - Nag-hahandle ng file uploads
+*
+* Konektado sa:
+* - comments.php (source ng form data)
+* - config/database.php (para sa database)
+* - uploads folder (para sa attachments)
+*/
 session_start();
 require_once 'config/database.php';
 

@@ -1,4 +1,15 @@
 <?php
+/*
+* clear_comments.php
+*
+* Ito ang utility script para ma-clear lahat ng comments
+* - Para sa admin lang dapat
+* - Delikado gamitin kasi mabubura lahat
+* - Dapat may confirmation muna
+*
+* Konektado sa:
+* - config/database.php (para sa database)
+*/
 require_once 'config/database.php';
 
 try {

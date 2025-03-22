@@ -1,3 +1,16 @@
+{{-- 
+* comments.blade.php
+*
+* Ito ang Laravel Blade template para sa comments
+* - Template lang ito, hindi directly executable
+* - Para sa Laravel version ng comment system
+* - May Blade syntax para sa dynamic content
+*
+* Konektado sa:
+* - resources/views/partials/reply-form.blade.php
+* - resources/views/partials/replies.blade.php
+--}}
+
 <!-- Main Comment Section -->
 <div class="comment-section">
     <!-- Add New Comment -->

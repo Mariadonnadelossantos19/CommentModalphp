@@ -1,3 +1,16 @@
+/*
+* database.sql
+*
+* Ito ang SQL dump file ng database structure
+* - Backup ng database schema
+* - Pwedeng gamitin para i-recreate ang database
+* - May CREATE TABLE statements para sa users at comments
+*
+* Konektado sa:
+* - setup.php (pareho silang may database structure)
+* - config/database.php (para sa actual database)
+*/
+
 -- Create users table
 CREATE TABLE IF NOT EXISTS `users` (
     `id` int(11) NOT NULL AUTO_INCREMENT,

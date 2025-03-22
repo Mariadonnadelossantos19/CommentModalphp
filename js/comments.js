@@ -1,3 +1,19 @@
+/*
+* js/comments.js
+*
+* Ito ang JavaScript file para sa comment system
+* - Nag-hahandle ng AJAX requests
+* - May real-time updates
+* - Client-side validations
+* - UI interactions (show/hide forms, etc)
+*
+* Konektado sa:
+* - comments.php (main interface)
+* - add_comment.php (para sa new comments)
+* - add_reply.php (para sa replies)
+* - delete_comment.php (para sa deletion)
+*/
+
 document.addEventListener('DOMContentLoaded', function() {
     // Function to auto-resize textarea
     function autoResize(textarea) {
@@ -203,11 +219,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const cancelDelete = document.getElementById('cancelDelete');
 
             // Show the modal
-            showModal('deleteModal');
+            deleteModal.classList.add('show');
+
+            // Close modal when clicking outside
+            window.onclick = function(e) {
+                if (e.target === deleteModal) {
+                    deleteModal.classList.remove('show');
+                }
+            };
 
             // Handle cancel
             cancelDelete.onclick = function() {
-                hideModal('deleteModal');
+                deleteModal.classList.remove('show');
             };
 
             // Handle confirm
@@ -223,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(data => {
                     if (data.success) {
                         commentItem.remove();
-                        hideModal('deleteModal');
+                        deleteModal.classList.remove('show');
                         showToast('Comment deleted successfully');
                     } else {
                         throw new Error(data.message || 'Failed to delete comment');
@@ -232,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Failed to delete comment');
-                    hideModal('deleteModal');
+                    deleteModal.classList.remove('show');
                 });
             };
         });
