@@ -2,127 +2,206 @@
 /*
 * register.php
 *
-* Ito ang registration page para sa mga bagong users
-* - May registration form
-* - Nag-validate ng user input
-* - Nag-hash ng password
-* - Nag-create ng bagong user sa database
-*
+* Ito ang registration page ng system
+* - Nag-hahandle ng user registration
+* - May form validation
+* - Nag-create ng new user account
+* 
 * Konektado sa:
-* - config/database.php (para sa database)
+* - config/database.php (para sa database connection)
 * - login.php (redirect after registration)
 */
 session_start();
 require_once 'config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $name = $_POST['name'];
-        $email = $_POST['email'];
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        $confirm_password = $_POST['confirm_password'];
-
-        // Validate passwords match
-        if ($password !== $confirm_password) {
-            throw new Exception('Passwords do not match');
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    
+    // Basic validation
+    $errors = [];
+    
+    if (empty($name)) {
+        $errors[] = "Name is required";
+    }
+    
+    if (empty($email)) {
+        $errors[] = "Email is required";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid email format";
+    }
+    
+    if (empty($password)) {
+        $errors[] = "Password is required";
+    } elseif (strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters";
+    }
+    
+    if ($password !== $confirm_password) {
+        $errors[] = "Passwords do not match";
+    }
+    
+    // Check if email already exists
+    $stmt = $db->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    
+    if ($user) {
+        $errors[] = "Email already in use";
+    }
+    
+    // If no errors, register the user
+    if (empty($errors)) {
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        
+        $stmt = $db->prepare("INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, NOW())");
+        $success = $stmt->execute([$name, $email, $hashed_password]);
+        
+        if ($success) {
+            $_SESSION['success_message'] = "Registration successful! You can now login.";
+            header('Location: login.php');
+            exit;
+        } else {
+            $errors[] = "Registration failed. Please try again.";
         }
-
-        // Check if email already exists
-        $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            throw new Exception('Email already registered');
-        }
-
-        // Check if username already exists
-        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        if ($stmt->fetch()) {
-            throw new Exception('Username already taken');
-        }
-
-        $avatar = 'default-avatar.png'; // Default avatar
-
-        // Handle avatar upload
-        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === 0) {
-            $upload_dir = 'uploads/avatars/';
-            
-            // Create directory if it doesn't exist
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-
-            $file_extension = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-            $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
-
-            if (!in_array($file_extension, $allowed_extensions)) {
-                throw new Exception('Invalid file type. Only JPG, PNG and GIF allowed.');
-            }
-
-            $avatar = uniqid() . '_' . $_FILES['avatar']['name'];
-            if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $upload_dir . $avatar)) {
-                throw new Exception('Failed to upload avatar');
-            }
-        }
-
-        // Create new user with avatar
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $db->prepare("INSERT INTO users (name, email, username, password, avatar) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $email, $username, $password_hash, $avatar]);
-
-        // Auto login after registration
-        $_SESSION['user_id'] = $db->lastInsertId();
-        $_SESSION['user_name'] = $name;
-        $_SESSION['avatar'] = $avatar;
-
-        header('Location: comments.php');
-        exit;
-    } catch (Exception $e) {
-        $error = $e->getMessage();
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <link rel="stylesheet" href="css/comments.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .register-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 15px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .card-header {
+            background-color: #6c757d;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1.5rem 1rem;
+        }
+        .btn-register {
+            background-color: #28a745;
+            border-color: #28a745;
+            font-weight: bold;
+            padding: 0.6rem 1rem;
+        }
+        .btn-register:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+        }
+        .input-group-text {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .register-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .alert-danger ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="login-form">
-            <h2>Register</h2>
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger"><?php echo $error; ?></div>
-            <?php endif; ?>
-            <form method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <input type="text" name="name" placeholder="Full Name" required>
-                </div>
-                <div class="form-group">
-                    <input type="email" name="email" placeholder="Email" required>
-                </div>
-                <div class="form-group">
-                    <input type="text" name="username" placeholder="Username" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                </div>
-                <div class="form-group">
-                    <label for="avatar">Profile Picture (optional)</label>
-                    <input type="file" name="avatar" id="avatar" accept="image/*" class="form-control">
-                </div>
-                <button type="submit" class="btn">Register</button>
-                <p class="text-center">
-                    Already have an account? <a href="login.php">Login here</a>
-                </p>
-            </form>
+    <div class="register-container">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user-plus register-logo"></i>
+                <h4 class="mb-0">Create an Account</h4>
+            </div>
+            <div class="card-body p-4">
+                <?php if (!empty($errors)): ?>
+                    <div class="alert alert-danger">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo $error; ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Enter your full name" value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                        </div>
+                        <div class="form-text">Password must be at least 6 characters</div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-check-circle"></i></span>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-register btn-success">Register</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="login-link">
+            <p class="mb-0">Already have an account? <a href="login.php" class="text-decoration-none fw-bold">Login here</a></p>
         </div>
     </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 
