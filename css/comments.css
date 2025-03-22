@@ -184,12 +184,13 @@ textarea.comment-content:focus {
     line-height: 1.5;
 }
 
-/* Reply section - simpler */
+/* Reply section - improved layout */
 .replies-container {
-    margin-left: 20px;
-    padding-left: 16px;
-    border-left: 2px solid var(--border-color);
     margin-top: 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--border-color);
+    margin-left: 16px;
+    padding-left: 16px;
 }
 
 .reply-item {
@@ -197,6 +198,72 @@ textarea.comment-content:focus {
     border-radius: var(--radius-sm);
     padding: 12px;
     margin-bottom: 8px;
+    position: relative;
+}
+
+.reply-item:before {
+    content: "";
+    position: absolute;
+    top: 16px;
+    left: -19px;
+    width: 16px;
+    height: 2px;
+    background-color: var(--border-color);
+}
+
+/* Reply form - positioned within the comment */
+.reply-form {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--secondary-color);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    display: none; /* Hidden by default, shown when reply button clicked */
+}
+
+.reply-form.active {
+    display: block;
+}
+
+.reply-heading {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+}
+
+.reply-content {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.send-reply, .cancel-reply {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.send-reply {
+    background: var(--primary-color);
+    color: white;
+}
+
+.cancel-reply {
+    background: #f3f4f6;
+    color: var(--text-color);
 }
 
 /* Modal styles - simplified */
@@ -306,16 +373,46 @@ input[type="file"] {
     background: #e5e7eb;
 }
 
-/* Action buttons - more consistent */
+/* Action buttons - grouped in corner */
 .comment-actions, .reply-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     margin-top: 12px;
+    justify-content: flex-end; /* Align to right corner */
 }
 
 .edit-comment, .delete-comment, .reply {
-    padding: 6px 12px;
-    font-size: 13px;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: #f3f4f6;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.edit-comment:hover, .delete-comment:hover, .reply:hover {
+    background: #e5e7eb;
+    color: var(--dark-color);
+}
+
+/* Optional: Add a more compact version for smaller screens */
+@media (max-width: 576px) {
+    .comment-actions, .reply-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .edit-comment, .delete-comment, .reply {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+    
+    .comment-item {
+        position: relative;
+        padding-top: 40px; /* Make space for the action buttons */
+    }
 }
 
 /* In iframe mode */

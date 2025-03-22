@@ -179,11 +179,13 @@ if (isset($_SESSION['flash_message'])) {
     <div class="navbar">
         <div class="container">
             <div class="user-info">
-                <img src="<?php echo getAvatarPath($_SESSION['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
-                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!
+                <div class="avatar">
+                    <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
+                </div>
+                <span><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
             </div>
-            <div class="nav-actions">
-                <a href="logout.php" class="btn btn-logout">Logout</a>
+            <div>
+                <a href="logout.php" class="btn-logout">Logout</a>
             </div>
         </div>
     </div>
@@ -212,10 +214,11 @@ if (isset($_SESSION['flash_message'])) {
                     <?php foreach($comments as $comment): ?>
                         <div class="comment-item" data-comment-id="<?php echo $comment['cmt_id']; ?>">
                             <div class="comment-content">
-                                <!-- Parent Comment -->
                                 <div class="comment-header">
                                     <div class="user-info">
-                                        <img src="<?php echo getAvatarPath($comment['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
+                                        <div class="avatar">
+                                            <?php echo strtoupper(substr($comment['user_name'], 0, 1)); ?>
+                                        </div>
                                         <span class="user-name"><?php echo htmlspecialchars($comment['user_name']); ?></span>
                                     </div>
                                     <span class="comment-date"><?php echo formatDate($comment['created_at']); ?></span>
@@ -229,9 +232,11 @@ if (isset($_SESSION['flash_message'])) {
                                     </div>
                                 <?php endif; ?>
                                 <div class="comment-actions">
-                                    <button class="btn edit-comment">Edit</button>
-                                    <button class="btn delete-comment">Delete</button>
-                                    <button class="btn reply">Reply</button>
+                                    <?php if($comment['cmt_added_by'] == $_SESSION['user_id']): ?>
+                                        <button class="edit-comment">Edit</button>
+                                        <button class="delete-comment">Delete</button>
+                                    <?php endif; ?>
+                                    <button class="reply">Reply</button>
                                 </div>
 
                                 <!-- Reply Form for this comment -->
@@ -258,7 +263,9 @@ if (isset($_SESSION['flash_message'])) {
                                             <div class="reply-content">
                                                 <div class="reply-header">
                                                     <div class="user-info">
-                                                        <img src="<?php echo getAvatarPath($reply['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
+                                                        <div class="avatar">
+                                                            <?php echo strtoupper(substr($reply['user_name'], 0, 1)); ?>
+                                                        </div>
                                                         <span class="user-name"><?php echo htmlspecialchars($reply['user_name']); ?></span>
                                                     </div>
                                                     <span class="reply-date"><?php echo formatDate($reply['created_at']); ?></span>
@@ -272,9 +279,9 @@ if (isset($_SESSION['flash_message'])) {
                                                     </div>
                                                 <?php endif; ?>
                                                 <div class="reply-actions">
-                                                    <?php if ($reply['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
-                                                        <button class="btn edit-reply">Edit</button>
-                                                        <button class="btn delete-reply">Delete</button>
+                                                    <?php if ($reply['cmt_added_by'] == $_SESSION['user_id']): ?>
+                                                        <button class="edit-reply">Edit</button>
+                                                        <button class="delete-reply">Delete</button>
                                                     <?php endif; ?>
                                                     <button class="btn reply">Reply</button>
                                                 </div>
@@ -303,7 +310,9 @@ if (isset($_SESSION['flash_message'])) {
                                                             <div class="reply-content">
                                                                 <div class="reply-header">
                                                                     <div class="user-info">
-                                                                        <img src="<?php echo getAvatarPath($nested_reply['avatar'] ?? ''); ?>" class="avatar" alt="User avatar">
+                                                                        <div class="avatar">
+                                                                            <?php echo strtoupper(substr($nested_reply['user_name'], 0, 1)); ?>
+                                                                        </div>
                                                                         <span class="user-name"><?php echo htmlspecialchars($nested_reply['user_name']); ?></span>
                                                                     </div>
                                                                     <span class="reply-date"><?php echo formatDate($nested_reply['created_at']); ?></span>
@@ -317,9 +326,9 @@ if (isset($_SESSION['flash_message'])) {
                                                                     </div>
                                                                 <?php endif; ?>
                                                                 <div class="reply-actions">
-                                                                    <?php if ($nested_reply['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
-                                                                        <button class="btn edit-reply">Edit</button>
-                                                                        <button class="btn delete-reply">Delete</button>
+                                                                    <?php if ($nested_reply['cmt_added_by'] == $_SESSION['user_id']): ?>
+                                                                        <button class="edit-reply">Edit</button>
+                                                                        <button class="delete-reply">Delete</button>
                                                                     <?php endif; ?>
                                                                 </div>
                                                             </div>

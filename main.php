@@ -166,11 +166,35 @@ function formatDate($date) {
             height: calc(100% - 20px);
             border: none;
         }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h1>
+        <div class="header">
+            <h1>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h1>
+            <a href="logout.php" class="logout-btn">Logout</a>
+        </div>
         
         <!-- Comment button with last comment -->
         <button class="comment-button" id="openComments">
