@@ -164,8 +164,18 @@ if (isset($_SESSION['flash_message'])) {
 <head>
     <title>Comments System</title>
     <link rel="stylesheet" href="css/comments.css">
+    <style>
+        /* Hide navbar when in iframe */
+        body.in-iframe .navbar {
+            display: none;
+        }
+        
+        body.in-iframe .container {
+            padding-top: 0;
+        }
+    </style>
 </head>
-<body>
+<body class="<?php echo isset($_GET['iframe']) ? 'in-iframe' : ''; ?>">
     <div class="navbar">
         <div class="container">
             <div class="user-info">

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['avatar'] = $user['avatar'];
-        header('Location: comments.php');
+        header('Location: main.php');
         exit;
     } else {
         $error = "Invalid email or password";
