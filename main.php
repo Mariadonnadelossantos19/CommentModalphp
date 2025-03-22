@@ -7,6 +7,22 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
+
+// Get the last comment/reply for this user
+$stmt = $db->prepare("
+    SELECT c.cmt_content, c.created_at, u.name as user_name 
+    FROM tblcomments c 
+    LEFT JOIN users u ON c.cmt_added_by = u.id 
+    ORDER BY c.created_at DESC 
+    LIMIT 1
+");
+$stmt->execute();
+$lastComment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Format the date
+function formatDate($date) {
+    return date('d M Y h:i A', strtotime($date));
+}
 ?>
 
 <!DOCTYPE html>
@@ -37,19 +53,63 @@ if (!isset($_SESSION['user_id'])) {
         }
 
         .comment-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #6c757d;
             color: white;
             text-decoration: none;
             border-radius: 5px;
             cursor: pointer;
             border: none;
             font-size: 16px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .comment-button:hover {
-            background-color: #0056b3;
+            background-color: #5a6268;
+        }
+
+        .comment-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+            flex: 1;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #dc3545;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .comment-details {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .comment-user {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            color: #e9ecef;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Modal styles */
@@ -99,10 +159,28 @@ if (!isset($_SESSION['user_id'])) {
     <div class="container">
         <h1>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h1>
         
-        <!-- Comment button -->
+        <!-- Comment button with last comment -->
         <button class="comment-button" id="openComments">
-            <img src="assets/images/comment-icon.png" alt="Comment" style="width: 20px; vertical-align: middle; margin-right: 5px;">
-            Add Comment
+            <?php if ($lastComment): ?>
+                <div class="comment-preview">
+                    <div class="user-avatar">
+                        <?php echo strtoupper(substr($lastComment['user_name'], 0, 1)); ?>
+                    </div>
+                    <div class="comment-details">
+                        <div class="comment-user"><?php echo htmlspecialchars($lastComment['user_name']); ?></div>
+                        <div class="comment-text"><?php echo htmlspecialchars($lastComment['cmt_content']); ?></div>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="comment-preview">
+                    <div class="user-avatar">
+                        <i class="fa fa-comment"></i>
+                    </div>
+                    <div class="comment-details">
+                        <div class="comment-text">No comments yet. Click to add comment.</div>
+                    </div>
+                </div>
+            <?php endif; ?>
         </button>
     </div>
 
