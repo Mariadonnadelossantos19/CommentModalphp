@@ -12,45 +12,45 @@
 * - config/database.php (para sa database)
 * - uploads folder (para sa attachments)
 */
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-header('Content-Type: application/json');
+session_start(); // Nagsisimula ng session para sa user authentication
+error_reporting(E_ALL); // Nagta-turn on ng lahat ng PHP errors
+ini_set('display_errors', 1); // Nagse-set na ipakita ang errors
+header('Content-Type: application/json'); // Nagta-tiyak na JSON ang response format
 
-require_once 'config/database.php';
+require_once 'config/database.php'; // Nag-lo-load ng database connection
 
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'User not authenticated']);
-    exit;
+if (!isset($_SESSION['user_id'])) { // Nagche-check kung may user_id sa session
+    echo json_encode(['success' => false, 'message' => 'User not authenticated']); // Nagbabalik ng error message kung hindi naka-login
+    exit; // Humihinto ang script
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
     try {
-        if (!isset($_POST['comment_id']) || !isset($_POST['cmt_content'])) {
-            throw new Exception('Missing required fields');
+        if (!isset($_POST['comment_id']) || !isset($_POST['cmt_content'])) { // Checking kung kompleto ang data
+            throw new Exception('Missing required fields'); // Nagtatapon ng error kung kulang ang fields
         }
 
-        $comment_id = $_POST['comment_id'];
+        $comment_id = $_POST['comment_id']; // Kinukuha ang comment ID na ie-edit
         
         // Check if user owns this comment
-        $stmt = $db->prepare("SELECT cmt_added_by FROM tblcomments WHERE cmt_id = ?");
-        $stmt->execute([$comment_id]);
-        $comment = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $db->prepare("SELECT cmt_added_by FROM tblcomments WHERE cmt_id = ?"); // Query para kunin ang may-ari ng comment
+        $stmt->execute([$comment_id]); // Nag-e-execute ng query
+        $comment = $stmt->fetch(PDO::FETCH_ASSOC); // Kinukuha ang comment data
         
-        if ($comment['cmt_added_by'] != $_SESSION['user_id']) {
-            throw new Exception('You can only edit your own comments');
+        if ($comment['cmt_added_by'] != $_SESSION['user_id']) { // Checking kung ang user ang may-ari ng comment
+            throw new Exception('You can only edit your own comments'); // Nagtatapon ng error kung hindi ang user ang may-ari
         }
 
-        $content = $_POST['cmt_content'];
-        $attachment = null;
+        $content = $_POST['cmt_content']; // Kinukuha ang bagong content
+        $attachment = null; // Default value para sa attachment
 
         // Handle file upload
-        if (isset($_FILES['cmt_attachment']) && $_FILES['cmt_attachment']['error'] === 0) {
-            $upload_dir = 'uploads/';
+        if (isset($_FILES['cmt_attachment']) && $_FILES['cmt_attachment']['error'] === 0) { // Checking kung may na-upload na file
+            $upload_dir = 'uploads/'; // Folder kung saan ilalagay ang files
             
             // Create uploads directory if it doesn't exist
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
+            if (!file_exists($upload_dir)) { // Checking kung umiiral na ang uploads folder
+                mkdir($upload_dir, 0777, true); // Gumagawa ng folder kung wala pa
             }
 
             $file_name = uniqid() . '_' . $_FILES['cmt_attachment']['name'];

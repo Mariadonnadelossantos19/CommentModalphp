@@ -115,7 +115,7 @@ textarea.comment-content {
     background-color: #fcfcfd; /* Very subtle gray */
 }
 
-}
+
 
 textarea.comment-content:focus {
     outline: none;
@@ -206,19 +206,17 @@ textarea.comment-content:focus {
 
 /* Reply section - improved layout */
 .replies-container {
-    margin-top: 16px;
-    margin-bottom: 12px;
-    border-left: 3px solid #e5e7eb; /* Lighter border */
-    margin-left: 20px;
-    padding-left: 20px;
+    margin-top: 20px; /* Space above replies */
+    padding: 10px;
+    border-top: 1px solid var(--border-color);
 }
 
 .reply-item {
-    background: var(--secondary-color);
+    margin-top: 10px; /* Space between replies */
+    padding: 10px;
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 12px;
-    margin-bottom: 8px;
-    position: relative;
+    background: var(--light-color);
 }
 
 .reply-item:before {
@@ -233,20 +231,19 @@ textarea.comment-content:focus {
 
 /* Reply form - positioned within the comment */
 .reply-form {
-    margin-top: 12px;
+    margin-top: 12px; /* Ensure there's space above the reply form */
     padding: 16px;
     background: var(--secondary-color);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
-    display: none;
+    display: none; /* Initially hidden */
     transition: all 0.3s ease;
-    max-height: 0;
-    overflow: hidden;
+    max-width: 100%; /* Ensure it doesn't overflow */
 }
 
+/* Show reply form when active */
 .reply-form.active {
-    display: block;
-    max-height: 300px;
+    display: block; /* Show when active */
 }
 
 .reply-heading {
@@ -440,7 +437,7 @@ input[type="file"] {
     
     .comment-item {
         position: relative;
-        padding-top: 40px; /* Make space for the action buttons */
+        padding-top: 40px;
     }
 }
 

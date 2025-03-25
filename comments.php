@@ -15,29 +15,29 @@
 * - config/database.php (para sa database connection)
 * - js/comments.js (para sa frontend functionality)
 */
-session_start();
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
+session_start(); // Nagsisimula ng session para sa user authentication
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0"); // Nag-setup ng cache control para hindi mag-cache ang browser
+header("Cache-Control: post-check=0, pre-check=0", false); // Additional cache control settings
+header("Pragma: no-cache"); // Additional cache control para sa lumang browsers
 
-require_once 'config/database.php';
+require_once 'config/database.php'; // Nag-lo-load ng database connection
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id'])) { // Nagche-check kung may user_id sa session
     // Redirect to login page or show login form
-    header('Location: login.php');
-    exit;
+    header('Location: login.php'); // Nire-redirect sa login page kung hindi naka-login
+    exit; // Humihinto ang script
 }
 
 // Get current user info
-$current_user_id = $_SESSION['user_id'];
-$current_user_name = $_SESSION['user_name'] ?? 'Unknown User';
+$current_user_id = $_SESSION['user_id']; // Kinukuha ang user ID mula sa session
+$current_user_name = $_SESSION['user_name'] ?? 'Unknown User'; // Kinukuha ang username mula sa session o "Unknown User" kung wala
 
 // Add this after session_start()
-echo "<!-- Current user ID: " . $_SESSION['user_id'] . " -->";
+echo "<!-- Current user ID: " . $_SESSION['user_id'] . " -->"; // Naglalagay ng comment sa HTML para sa debugging
 
 // Add this after getting user info
-$is_admin = ($_SESSION['user_id'] == 1); // Or check against a list of admin IDs
+$is_admin = ($_SESSION['user_id'] == 1); // Checking kung admin ang user (ID = 1)
 
 // Get comments with user information
 $stmt = $db->prepare("
@@ -46,13 +46,13 @@ $stmt = $db->prepare("
     LEFT JOIN users u ON c.cmt_added_by = u.id 
     WHERE c.cmt_isReply_to IS NULL 
     ORDER BY c.created_at DESC
-");
-$stmt->execute();
-$comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo "<!-- Debug: Number of comments: " . count($comments) . " -->";
+"); // Query para kunin ang lahat ng comments na hindi reply
+$stmt->execute(); // Nag-e-execute ng query
+$comments = $stmt->fetchAll(PDO::FETCH_ASSOC); // Kinukuha ang lahat ng comments bilang array
+echo "<!-- Debug: Number of comments: " . count($comments) . " -->"; // Debugging para sa bilang ng comments
 // And update the debug output for comments
 echo "<!-- Debug: ";
-var_dump($comments);
+var_dump($comments); // Nagpa-print ng debug info sa HTML comment
 echo " -->";
 
 // Get replies for each comment

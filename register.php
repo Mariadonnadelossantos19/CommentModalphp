@@ -14,42 +14,42 @@
 session_start();
 require_once 'config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
+    $name = $_POST['name']; // Kinukuha ang name mula sa form
+    $email = $_POST['email']; // Kinukuha ang email mula sa form
+    $password = $_POST['password']; // Kinukuha ang password mula sa form
+    $confirm_password = $_POST['confirm_password']; // Kinukuha ang password confirmation
     
     // Basic validation
-    $errors = [];
+    $errors = []; // Array para sa error messages
     
-    if (empty($name)) {
-        $errors[] = "Name is required";
+    if (empty($name)) { // Checking kung walang name
+        $errors[] = "Name is required"; // Nagdadagdag ng error message
     }
     
-    if (empty($email)) {
-        $errors[] = "Email is required";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Invalid email format";
+    if (empty($email)) { // Checking kung walang email
+        $errors[] = "Email is required"; // Nagdadagdag ng error message
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { // Checking kung valid ang email format
+        $errors[] = "Invalid email format"; // Nagdadagdag ng error message
     }
     
-    if (empty($password)) {
-        $errors[] = "Password is required";
-    } elseif (strlen($password) < 6) {
-        $errors[] = "Password must be at least 6 characters";
+    if (empty($password)) { // Checking kung walang password
+        $errors[] = "Password is required"; // Nagdadagdag ng error message
+    } elseif (strlen($password) < 6) { // Checking kung masyadong maikli ang password
+        $errors[] = "Password must be at least 6 characters"; // Nagdadagdag ng error message
     }
     
-    if ($password !== $confirm_password) {
-        $errors[] = "Passwords do not match";
+    if ($password !== $confirm_password) { // Checking kung hindi match ang passwords
+        $errors[] = "Passwords do not match"; // Nagdadagdag ng error message
     }
     
     // Check if email already exists
-    $stmt = $db->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+    $stmt = $db->prepare("SELECT * FROM users WHERE email = ?"); // Query para i-check kung may existing user
+    $stmt->execute([$email]); // Nag-e-execute ng query
+    $user = $stmt->fetch(); // Kinukuha ang result
     
-    if ($user) {
-        $errors[] = "Email already in use";
+    if ($user) { // Checking kung may existing user na
+        $errors[] = "Email already in use"; // Nagdadagdag ng error message
     }
     
     // If no errors, register the user

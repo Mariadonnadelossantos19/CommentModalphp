@@ -14,34 +14,34 @@
 * - delete_comment.php (para sa deletion)
 */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng event listener pag fully loaded ang page
     // Function to auto-resize textarea
-    function autoResize(textarea) {
-        textarea.style.height = 'auto'; // Reset height
-        textarea.style.height = textarea.scrollHeight + 'px';
+    function autoResize(textarea) { // Function para awtomatikong i-adjust ang height ng textarea
+        textarea.style.height = 'auto'; // Nire-reset ang height
+        textarea.style.height = textarea.scrollHeight + 'px'; // Nagse-set ng height base sa content
     }
 
     // Apply auto-resize to all textareas
-    function initializeAutoResize() {
-        const textareas = document.querySelectorAll('.comment-content, .reply-content, .edit-content');
-        textareas.forEach(textarea => {
+    function initializeAutoResize() { // Function para i-apply ang auto-resize sa lahat ng textareas
+        const textareas = document.querySelectorAll('.comment-content, .reply-content, .edit-content'); // Kumuha ng lahat ng textarea elements
+        textareas.forEach(textarea => { // Umiikot sa bawat textarea
             // Initial resize
-            autoResize(textarea);
+            autoResize(textarea); // Una munang i-resize
 
             // Resize on input
-            textarea.addEventListener('input', function() {
-                autoResize(this);
+            textarea.addEventListener('input', function() { // Nag-a-add ng event listener para sa input
+                autoResize(this); // I-resize habang nagta-type
             });
 
             // Resize on focus
-            textarea.addEventListener('focus', function() {
-                autoResize(this);
+            textarea.addEventListener('focus', function() { // Nag-a-add ng event listener para sa focus
+                autoResize(this); // I-resize kapag nag-focus
             });
         });
     }
 
     // Initialize auto-resize
-    initializeAutoResize();
+    initializeAutoResize(); // Tinatawag ang function para mag-initialize
 
     // Handle reply button clicks
     document.querySelectorAll('.reply').forEach(button => {

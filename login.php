@@ -12,25 +12,25 @@
 * - comments.php (redirect after login)
 * - register.php (link para sa registration)
 */
-session_start();
-require_once 'config/database.php';
+session_start(); // Nagsisimula ng session para sa user authentication
+require_once 'config/database.php'; // Nag-lo-load ng database connection
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
+    $email = $_POST['email']; // Kinukuha ang email mula sa form
+    $password = $_POST['password']; // Kinukuha ang password mula sa form
 
-    $stmt = $db->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare("SELECT * FROM users WHERE email = ?"); // Query para kunin ang user base sa email
+    $stmt->execute([$email]); // Nag-e-execute ng query
+    $user = $stmt->fetch(PDO::FETCH_ASSOC); // Kinukuha ang user data
 
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['name'];
-        $_SESSION['avatar'] = $user['avatar'];
-        header('Location: main.php');
-        exit;
+    if ($user && password_verify($password, $user['password'])) { // Checking kung tama ang email at password
+        $_SESSION['user_id'] = $user['id']; // Nagse-set ng user ID sa session
+        $_SESSION['user_name'] = $user['name']; // Nagse-set ng user name sa session
+        $_SESSION['avatar'] = $user['avatar']; // Nagse-set ng user avatar sa session
+        header('Location: main.php'); // Nire-redirect sa main page
+        exit; // Humihinto ang script
     } else {
-        $error = "Invalid email or password";
+        $error = "Invalid email or password"; // Nagse-set ng error message kung mali ang credentials
     }
 }
 ?>

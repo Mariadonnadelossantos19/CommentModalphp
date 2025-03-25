@@ -13,7 +13,7 @@
 * - register.php (pareho silang gumagawa ng users)
 */
 
-require_once 'config/database.php';
+require_once 'config/database.php'; // Nag-lo-load ng database connection
 
 try {
     // Create users table
@@ -29,14 +29,14 @@ try {
             UNIQUE KEY `username` (`username`),
             UNIQUE KEY `email` (`email`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
+    "); // Gumagawa ng users table kung wala pa
 
     // Insert test user
-    $password_hash = password_hash('password123', PASSWORD_DEFAULT);
-    $stmt = $db->prepare("INSERT INTO users (name, email, username, password) VALUES (?, ?, ?, ?)");
-    $stmt->execute(['Test User', 'test@example.com', 'testuser', $password_hash]);
+    $password_hash = password_hash('password123', PASSWORD_DEFAULT); // Nage-encrypt ng password
+    $stmt = $db->prepare("INSERT INTO users (name, email, username, password) VALUES (?, ?, ?, ?)"); // Query para magdagdag ng test user
+    $stmt->execute(['Test User', 'test@example.com', 'testuser', $password_hash]); // Nag-e-execute ng query
 
-    echo "Setup completed successfully!";
+    echo "Setup completed successfully!"; // Nagdi-display ng success message
 } catch (PDOException $e) {
-    echo "Error: " . $e->getMessage();
+    echo "Error: " . $e->getMessage(); // Nagdi-display ng error message kung may problema
 }

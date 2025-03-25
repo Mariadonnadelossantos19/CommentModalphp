@@ -10,7 +10,7 @@
 * - comments.php (source ng logout request)
 * - login.php (redirect destination)
 */
-session_start();
-session_destroy();
-header('Location: login.php');
-exit; 
+session_start(); // Nagsisimula ng session para ma-access ito
+session_destroy(); // Binubura ang kasalukuyang session at lahat ng data nito
+header('Location: login.php'); // Nire-redirect sa login page
+exit; // Humihinto ang script 
