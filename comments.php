@@ -658,7 +658,7 @@ if (isset($_SESSION['flash_message'])) {
                                     $replies = getReplies($db, $comment['cmt_id']);
                                     foreach($replies as $reply): 
                                     ?>
-                                        <div class="reply-item" data-reply-id="<?php echo $reply['cmt_id']; ?>">
+                                        <div class="reply-item" data-reply-id="<?php echo $reply['cmt_id']; ?>" data-parent-id="<?php echo $comment['cmt_id']; ?>">
                                             <div class="reply-content">
                                                 <div class="reply-header">
                                                     <div class="user-info">
@@ -678,11 +678,11 @@ if (isset($_SESSION['flash_message'])) {
                                                     </div>
                                                 <?php endif; ?>
                                                 <div class="reply-actions">
-                                                    <?php if ($reply['cmt_added_by'] == $_SESSION['user_id']): ?>
-                                                        <button class="edit-reply">Edit</button>
-                                                        <button class="delete-reply">Delete</button>
+                                                    <?php if ($reply['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
+                                                        <button class="edit-reply" data-id="<?php echo $reply['cmt_id']; ?>">Edit</button>
+                                                        <button class="delete-reply" data-id="<?php echo $reply['cmt_id']; ?>">Delete</button>
                                                     <?php endif; ?>
-                                                    <button class="btn reply">Reply</button>
+                                                    <button class="btn reply-button" data-id="<?php echo $reply['cmt_id']; ?>" data-parent="<?php echo $comment['cmt_id']; ?>">Reply</button>
                                                     
                                                     <!-- Add the reply count here -->
                                                     <?php 
@@ -693,10 +693,11 @@ if (isset($_SESSION['flash_message'])) {
                                                     <?php endif; ?>
                                                 </div>
 
-                                                <!-- Add nested reply form -->
-                                                <div class="reply-form nested-reply-form" style="display: none;">
+                                                <!-- Reply form for this specific reply -->
+                                                <div class="reply-form nested-reply-form" id="reply-form-<?php echo $reply['cmt_id']; ?>" style="display: none;">
                                                     <form action="add_reply.php" method="POST" enctype="multipart/form-data">
                                                         <input type="hidden" name="parent_id" value="<?php echo $reply['cmt_id']; ?>">
+                                                        <input type="hidden" name="original_comment_id" value="<?php echo $comment['cmt_id']; ?>">
                                                         <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                                                         <textarea name="cmt_content" class="reply-content" placeholder="Write your reply..."></textarea>
                                                         <div class="reply-actions">
@@ -707,13 +708,13 @@ if (isset($_SESSION['flash_message'])) {
                                                     </form>
                                                 </div>
 
-                                                <!-- Add container for nested replies -->
+                                                <!-- Container for nested replies -->
                                                 <div class="nested-replies-container">
                                                     <?php 
                                                     $nested_replies = getReplies($db, $reply['cmt_id']);
                                                     foreach($nested_replies as $nested_reply): 
                                                     ?>
-                                                        <div class="nested-reply-item" data-reply-id="<?php echo $nested_reply['cmt_id']; ?>">
+                                                        <div class="nested-reply-item" data-reply-id="<?php echo $nested_reply['cmt_id']; ?>" data-parent-id="<?php echo $reply['cmt_id']; ?>" data-top-comment-id="<?php echo $comment['cmt_id']; ?>">
                                                             <div class="reply-content">
                                                                 <div class="reply-header">
                                                                     <div class="user-info">
@@ -733,10 +734,26 @@ if (isset($_SESSION['flash_message'])) {
                                                                     </div>
                                                                 <?php endif; ?>
                                                                 <div class="reply-actions">
-                                                                    <?php if ($nested_reply['cmt_added_by'] == $_SESSION['user_id']): ?>
-                                                                        <button class="edit-reply">Edit</button>
-                                                                        <button class="delete-reply">Delete</button>
+                                                                    <?php if ($nested_reply['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
+                                                                        <button class="edit-reply" data-id="<?php echo $nested_reply['cmt_id']; ?>">Edit</button>
+                                                                        <button class="delete-reply" data-id="<?php echo $nested_reply['cmt_id']; ?>">Delete</button>
                                                                     <?php endif; ?>
+                                                                    <button class="btn reply-button" data-id="<?php echo $nested_reply['cmt_id']; ?>" data-parent="<?php echo $reply['cmt_id']; ?>" data-top="<?php echo $comment['cmt_id']; ?>">Reply</button>
+                                                                </div>
+                                                                
+                                                                <!-- Reply form for this nested reply -->
+                                                                <div class="reply-form nested-nested-reply-form" id="reply-form-<?php echo $nested_reply['cmt_id']; ?>" style="display: none;">
+                                                                    <form action="add_reply.php" method="POST" enctype="multipart/form-data">
+                                                                        <input type="hidden" name="parent_id" value="<?php echo $reply['cmt_id']; ?>">
+                                                                        <input type="hidden" name="original_comment_id" value="<?php echo $comment['cmt_id']; ?>">
+                                                                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                                                                        <textarea name="cmt_content" class="reply-content" placeholder="Write your reply..."></textarea>
+                                                                        <div class="reply-actions">
+                                                                            <input type="file" name="cmt_attachment" class="upload-reply" accept="image/*,.pdf,.doc,.docx">
+                                                                            <button type="submit" class="btn send-reply">Send Reply</button>
+                                                                            <button type="button" class="btn cancel-reply">Cancel</button>
+                                                                        </div>
+                                                                    </form>
                                                                 </div>
                                                             </div>
                                                         </div>

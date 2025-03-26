@@ -43,324 +43,273 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
     // Initialize auto-resize
     initializeAutoResize(); // Tinatawag ang function para mag-initialize
 
-    // Handle reply button clicks
-    document.querySelectorAll('.reply').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const replyItem = this.closest('.reply-item, .comment-item');
-            const replyForm = replyItem.querySelector('.reply-form');
-            
-            // Hide all other reply forms first
-            document.querySelectorAll('.reply-form').forEach(form => {
-                if (form !== replyForm) {
-                    form.style.display = 'none';
-                }
-            });
-
-            // Toggle this reply form
-            replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
-
-            // Initialize auto-resize for the textarea
-            if (replyForm.style.display === 'block') {
-                const textarea = replyForm.querySelector('textarea');
-                if (textarea) {
-                    autoResize(textarea);
-                }
-            }
-        });
-    });
-
-    // Handle cancel reply buttons
-    document.querySelectorAll('.cancel-reply').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const replyForm = this.closest('.reply-form');
-            replyForm.style.display = 'none';
-        });
-    });
-
-    // Handle edit button clicks
-    document.querySelectorAll('.edit-comment, .edit-reply').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const commentItem = this.closest('.comment-item, .reply-item');
-            
-            // Find the text content based on whether it's a comment or reply
-            let textElement;
-            if (commentItem.classList.contains('comment-item')) {
-                textElement = commentItem.querySelector('.comment-text');
-            } else {
-                textElement = commentItem.querySelector('.reply-text');
-            }
-
-            if (!textElement) {
-                console.error('Could not find text element');
-                return;
-            }
-
-            const commentText = textElement.textContent.trim();
-            
-            // Create edit form
-            const editForm = document.createElement('div');
-            editForm.className = 'edit-form';
-            editForm.innerHTML = `
-                <form class="edit-comment-form">
-                    <textarea class="edit-content" rows="1">${commentText}</textarea>
-                    <div class="edit-actions">
-                        <input type="file" name="cmt_attachment" class="edit-attachment" accept="image/*,.pdf,.doc,.docx">
-                        <button type="submit" class="btn save-edit">Save</button>
-                        <button type="button" class="btn cancel-edit">Cancel</button>
-                    </div>
-                </form>
-            `;
-
-            // Hide the original content
-            textElement.style.display = 'none';
-            const actionsElement = commentItem.querySelector('.comment-actions, .reply-actions');
-            if (actionsElement) {
-                actionsElement.style.display = 'none';
-            }
-
-            // Insert the edit form
-            if (commentItem.classList.contains('comment-item')) {
-                commentItem.querySelector('.comment-content').appendChild(editForm);
-            } else {
-                commentItem.querySelector('.reply-content').appendChild(editForm);
-            }
-
-            // Handle save edit
-            editForm.querySelector('form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData();
-                formData.append('comment_id', commentItem.dataset.commentId || commentItem.dataset.replyId);
-                formData.append('cmt_content', editForm.querySelector('.edit-content').value);
-                
-                const attachment = editForm.querySelector('.edit-attachment').files[0];
-                if (attachment) {
-                    formData.append('cmt_attachment', attachment);
-                }
-
-                fetch('update_comment.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Update the text content
-                        textElement.textContent = editForm.querySelector('.edit-content').value;
-                        textElement.style.display = 'block';
-                        if (actionsElement) {
-                            actionsElement.style.display = 'block';
-                        }
-                        editForm.remove();
-                        
-                        // Only reload if there was an attachment
-                        if (attachment) {
-                            location.reload();
-                        }
-                    } else {
-                        throw new Error(data.message || 'Failed to update comment');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to update comment: ' + error.message);
-                });
-            });
-
-            // Handle cancel edit
-            editForm.querySelector('.cancel-edit').addEventListener('click', function() {
-                textElement.style.display = 'block';
-                if (actionsElement) {
-                    actionsElement.style.display = 'block';
-                }
-                editForm.remove();
-            });
-
-            // After creating the edit form, initialize auto-resize for its textarea
-            setTimeout(() => {
-                initializeAutoResize();
-            }, 0);
-        });
-    });
-
-    // Add these functions at the top
-    function showModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
-    }
-
-    function hideModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    function showToast(message, type = 'success') {
+    // Toast notification function
+    function showToast(message) {
         const toast = document.getElementById('successToast');
         toast.textContent = message;
-        toast.className = 'toast ' + type;
         toast.style.display = 'block';
         
-        setTimeout(() => {
+        setTimeout(function() {
             toast.style.display = 'none';
         }, 3000);
     }
 
-    // Update the delete button handler
-    document.querySelectorAll('.delete-comment, .delete-reply').forEach(button => {
-        button.addEventListener('click', function(e) {
-            const commentItem = this.closest('.comment-item, .reply-item, .nested-reply-item');
-            const isReply = this.classList.contains('delete-reply') ? 1 : 0;
-            const commentId = commentItem.dataset.commentId || commentItem.dataset.replyId;
-            
-            // Show confirmation dialog
-            const deleteModal = document.getElementById('deleteModal');
-            deleteModal.classList.add('show');
-            
-            // Handle cancel
-            document.getElementById('cancelDelete').onclick = function() {
-                deleteModal.classList.remove('show');
-            };
-            
-            // Handle confirm
-            document.getElementById('confirmDelete').onclick = function() {
-                const formData = new FormData();
-                formData.append('comment_id', commentId);
-                formData.append('is_reply', isReply);
-                
-                fetch('delete_comment.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Remove the comment/reply item
-                        commentItem.remove();
-                        
-                        // Update reply count if this was a reply
-                        if (data.parent_id) {
-                            const parentComment = document.querySelector(`.comment-item[data-comment-id="${data.parent_id}"], .reply-item[data-reply-id="${data.parent_id}"]`);
-                            if (parentComment) {
-                                let countSpan = parentComment.querySelector('.reply-count');
-                                
-                                if (data.new_count > 0) {
-                                    // Update existing count span or create a new one
-                                    if (!countSpan) {
-                                        countSpan = document.createElement('span');
-                                        countSpan.className = 'reply-count';
-                                        parentComment.querySelector('.comment-actions, .reply-actions').appendChild(countSpan);
-                                    }
-                                    countSpan.textContent = data.new_count + (data.new_count === 1 ? ' reply' : ' replies');
-                                } else if (countSpan) {
-                                    // Remove count span if zero replies
-                                    countSpan.remove();
-                                }
-                            }
-                        }
-                        
-                        // Hide modal
-                        deleteModal.classList.remove('show');
-                        showToast('Comment deleted successfully');
-                    } else {
-                        throw new Error(data.message || 'Failed to delete comment');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to delete comment');
-                    deleteModal.classList.remove('show');
-                });
-            };
-        });
-    });
+    // Debug log helper
+    function debug(message, data) {
+        console.log(`DEBUG: ${message}`, data);
+    }
 
-    // Update the reply form submission
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (this.action.includes('add_reply.php') || this.action.includes('add_comment.php')) {
-                e.preventDefault();
-                
-                fetch(this.action, {
-                    method: 'POST',
-                    body: new FormData(this)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast('Comment submitted successfully');
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        throw new Error(data.message || 'Failed to submit comment');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to submit comment');
-                });
+    // =========== REPLY FUNCTIONALITY ===========
+    
+    // Handle reply button clicks using event delegation
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('reply-button') || 
+            (event.target.classList.contains('reply') && !event.target.classList.contains('delete-reply') && !event.target.classList.contains('edit-reply'))) {
+            event.preventDefault();
+            
+            // Get the ID of the item being replied to
+            const replyId = event.target.dataset.id || 
+                            event.target.closest('.comment-item, .reply-item, .nested-reply-item').dataset.commentId || 
+                            event.target.closest('.comment-item, .reply-item, .nested-reply-item').dataset.replyId;
+            
+            debug('Reply button clicked for ID', replyId);
+            
+            // Hide all other reply forms first
+            document.querySelectorAll('.reply-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Find and show the appropriate reply form
+            const formId = `reply-form-${replyId}`;
+            const replyForm = document.getElementById(formId) || 
+                             event.target.closest('.comment-item, .reply-item, .nested-reply-item').querySelector('.reply-form');
+
+            if (replyForm) {
+                replyForm.style.display = 'block';
+                replyForm.querySelector('textarea').focus();
+                debug('Reply form displayed', formId);
+            } else {
+                console.error('Reply form not found for ID:', replyId);
             }
-        });
+        }
+    });
+    
+    // Handle cancel reply
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('cancel-reply')) {
+            event.preventDefault();
+            const replyForm = event.target.closest('.reply-form');
+            if (replyForm) {
+                replyForm.style.display = 'none';
+                replyForm.querySelector('textarea').value = '';
+                debug('Reply form cancelled');
+            }
+        }
     });
 
-    // When a form is submitted for edit
-    document.body.addEventListener('submit', function(e) {
-        if (e.target.classList.contains('edit-form')) {
-            e.preventDefault();
+    // =========== EDIT FUNCTIONALITY ===========
+    
+    // Handle edit button clicks
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('edit-comment') || event.target.classList.contains('edit-reply')) {
+            event.preventDefault();
             
-            const form = e.target;
-            const formData = new FormData(form);
-            const contentDiv = form.closest('.comment-text, .reply-text');
-            const item = form.closest('.comment-item, .reply-item');
+            const container = event.target.closest('.comment-item, .reply-item, .nested-reply-item');
+            const contentElement = container.querySelector('.comment-text, .reply-text');
+            const originalContent = contentElement.textContent.trim();
             
-            fetch(form.action, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            // Extract the ID from data attribute or container
+            const itemId = event.target.dataset.id || 
+                          container.dataset.commentId || 
+                          container.dataset.replyId;
+            
+            debug('Edit button clicked for ID', itemId);
+            
+            // Check if already in edit mode
+            if (container.querySelector('.edit-form')) {
+                debug('Already in edit mode, ignoring click');
+                return;
+            }
+            
+            // Create edit form
+            const editForm = document.createElement('form');
+            editForm.className = 'edit-form';
+            editForm.innerHTML = `
+                <input type="hidden" name="csrf_token" value="${document.querySelector('input[name="csrf_token"]').value}">
+                <input type="hidden" name="item_id" value="${itemId}">
+                <textarea name="content" class="edit-content">${originalContent}</textarea>
+                <div class="edit-actions">
+                    <button type="submit" class="btn save-edit">Save</button>
+                    <button type="button" class="btn cancel-edit">Cancel</button>
+                </div>
+            `;
+            
+            // Replace content with edit form
+            contentElement.style.display = 'none';
+            contentElement.insertAdjacentElement('afterend', editForm);
+            
+            // Focus textarea
+            editForm.querySelector('textarea').focus();
+            debug('Edit form displayed for', itemId);
+            
+            // Save edit handler
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const newContent = this.querySelector('textarea').value.trim();
+                const formItemId = this.querySelector('input[name="item_id"]').value;
+                
+                debug('Saving edit for ID', formItemId);
+                
+                if (newContent === '') {
+                    alert('Comment cannot be empty.');
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Replace the form with the updated content
-                    contentDiv.innerHTML = data.content || formData.get('content');
+                
+                // Determine if this is a comment or reply
+                const isComment = container.classList.contains('comment-item');
+                
+                debug('Is comment?', isComment);
+                debug('Sending AJAX to', isComment ? 'edit_comment.php' : 'edit_reply.php');
+                
+                // Send AJAX request to update
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', isComment ? 'edit_comment.php' : 'edit_reply.php');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onload = function() {
+                    debug('AJAX response received', xhr.responseText);
                     
-                    // Update attachment if needed
-                    if (data.attachment) {
-                        let attachmentDiv = item.querySelector('.comment-attachment, .reply-attachment');
-                        if (!attachmentDiv) {
-                            attachmentDiv = document.createElement('div');
-                            attachmentDiv.className = item.classList.contains('comment-item') ? 
-                                'comment-attachment' : 'reply-attachment';
-                            contentDiv.after(attachmentDiv);
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                // Update content
+                                contentElement.textContent = newContent;
+                                contentElement.style.display = 'block';
+                                editForm.remove();
+                                
+                                // Show success message
+                                showToast('Changes saved successfully.');
+                                debug('Edit saved successfully');
+                            } else {
+                                alert(response.message || 'Error saving changes.');
+                                debug('Edit failed with message', response.message);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing JSON:', e, 'Response:', xhr.responseText);
+                            alert('Invalid response from server.');
                         }
-                        attachmentDiv.innerHTML = `<a href="${data.attachment}" target="_blank">View Attachment</a>`;
                     } else {
-                        // Remove attachment div if attachment was removed
-                        const attachmentDiv = item.querySelector('.comment-attachment, .reply-attachment');
-                        if (attachmentDiv) {
-                            attachmentDiv.remove();
-                        }
+                        debug('HTTP error', xhr.status);
+                        alert('Error saving changes. Please try again.');
                     }
-                    
-                    // Show success message
-                    showToast('Comment updated successfully', 'success');
-                } else {
-                    showToast(data.message || 'Error updating comment', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('An error occurred while updating', 'error');
+                };
+                xhr.send(`id=${formItemId}&content=${encodeURIComponent(newContent)}&csrf_token=${encodeURIComponent(document.querySelector('input[name="csrf_token"]').value)}`);
+            });
+            
+            // Cancel edit handler
+            editForm.querySelector('.cancel-edit').addEventListener('click', function() {
+                contentElement.style.display = 'block';
+                editForm.remove();
+                debug('Edit cancelled');
             });
         }
     });
+
+    // =========== DELETE FUNCTIONALITY ===========
+    
+    // Handle delete button clicks
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-comment') || event.target.classList.contains('delete-reply')) {
+            event.preventDefault();
+            
+            const container = event.target.closest('.comment-item, .reply-item, .nested-reply-item');
+            const isComment = container.classList.contains('comment-item');
+            
+            // Extract the ID from data attribute or container
+            const itemId = event.target.dataset.id || 
+                          container.dataset.commentId || 
+                          container.dataset.replyId;
+            
+            debug('Delete button clicked for ID', itemId);
+            debug('Is comment?', isComment);
+            
+            // Show confirmation modal
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'flex';
+            
+            // Store reference to the item being deleted
+            modal.dataset.deleteItemId = itemId;
+            modal.dataset.isComment = isComment ? 'true' : 'false';
+            
+            // Set up confirm delete button
+            document.getElementById('confirmDelete').onclick = function() {
+                debug('Confirm delete clicked for', modal.dataset.deleteItemId);
+                deleteItem(modal.dataset.deleteItemId, modal.dataset.isComment === 'true', container);
+                modal.style.display = 'none';
+            };
+            
+            // Set up cancel delete button
+            document.getElementById('cancelDelete').onclick = function() {
+                modal.style.display = 'none';
+                debug('Delete cancelled');
+            };
+        }
+    });
+    
+    // Delete item function
+    function deleteItem(itemId, isComment, container) {
+        debug('Deleting item', { id: itemId, isComment: isComment });
+        debug('Sending AJAX to', isComment ? 'delete_comment.php' : 'delete_reply.php');
+        
+        // Send AJAX request to delete
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', isComment ? 'delete_comment.php' : 'delete_reply.php');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+            debug('AJAX response received', xhr.responseText);
+            
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        // Remove the container from DOM
+                        container.remove();
+                        
+                        // Show success message
+                        showToast('Item deleted successfully.');
+                        debug('Delete successful');
+                        
+                        // Update reply count if needed
+                        if (!isComment) {
+                            const parentContainer = container.closest('.comment-item, .reply-item');
+                            if (parentContainer) {
+                                const replyCountElement = parentContainer.querySelector('.reply-count');
+                                if (replyCountElement) {
+                                    const currentCount = parseInt(replyCountElement.textContent.split(' ')[0], 10);
+                                    if (currentCount > 1) {
+                                        replyCountElement.textContent = (currentCount - 1) + ' ' + 
+                                           ((currentCount - 1) === 1 ? 'reply' : 'replies');
+                                        debug('Updated reply count to', currentCount - 1);
+                                    } else {
+                                        replyCountElement.remove();
+                                        debug('Removed reply count element');
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        alert(response.message || 'Error deleting item.');
+                        debug('Delete failed with message', response.message);
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON:', e, 'Response:', xhr.responseText);
+                    alert('Invalid response from server.');
+                }
+            } else {
+                debug('HTTP error', xhr.status);
+                alert('Error deleting item. Please try again.');
+            }
+        };
+        xhr.send(`id=${itemId}&csrf_token=${encodeURIComponent(document.querySelector('input[name="csrf_token"]').value)}`);
+    }
 }); 
