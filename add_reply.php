@@ -16,36 +16,50 @@ require_once 'config/database.php'; // Nag-lo-load ng database connection
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) { // Nagche-check kung may user_id sa session
-    echo json_encode(['success' => false, 'message' => 'User not authenticated']); // Nagbabalik ng error message kung hindi naka-login
-    exit; // Humihinto ang script
+    header('Location: login.php');
+    exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
-    $content = $_POST['cmt_content']; // Kinukuha ang reply content
-    $parent_id = $_POST['parent_id']; // Kinukuha ang ID ng comment na rineply-an
-    $added_by = $_SESSION['user_id']; // Kinukuha ang ID ng user
-    $attachment = null; // Default value para sa attachment
+// Validate CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    die('Invalid security token');
+}
 
-    // Get the funding_id from parent comment
-    $stmt = $db->prepare("SELECT cmt_fnd_id FROM tblcomments WHERE cmt_id = ?"); // Query para kunin ang funding ID ng parent comment
-    $stmt->execute([$parent_id]); // Nag-e-execute ng query
-    $parent = $stmt->fetch(PDO::FETCH_ASSOC); // Kinukuha ang parent comment data
-    $funding_id = $parent['cmt_fnd_id']; // Kinukuha ang funding ID
+// Check if parent_id is provided
+if (!isset($_POST['parent_id'])) {
+    die('Missing parent ID');
+}
 
-    // Handle file upload
-    if (isset($_FILES['cmt_attachment']) && $_FILES['cmt_attachment']['error'] === 0) { // Checking kung may na-upload na file
-        $upload_dir = 'uploads/'; // Folder kung saan ilalagay ang files
-        $file_name = uniqid() . '_' . $_FILES['cmt_attachment']['name']; // Gumagawa ng unique filename
-        move_uploaded_file($_FILES['cmt_attachment']['tmp_name'], $upload_dir . $file_name); // Nagli-lipat ng file sa uploads folder
-        $attachment = $file_name; // Nagse-set ng filename sa variable
-    }
+$parent_id = $_POST['parent_id'];
+$content = $_POST['cmt_content'] ?? '';
+$user_id = $_SESSION['user_id'];
 
-    // Insert reply
-    $stmt = $db->prepare("INSERT INTO tblcomments (cmt_fnd_id, cmt_content, cmt_attachment, cmt_added_by, cmt_isReply_to, created_at) VALUES (?, ?, ?, ?, ?, NOW())"); // Query para i-save ang reply
-    $stmt->execute([$funding_id, $content, $attachment, $added_by, $parent_id]); // Nag-e-execute ng query
+// Validate content
+if (empty(trim($content))) {
+    die('Reply content cannot be empty');
+}
 
-    // After successful insertion
-    header('Content-Type: application/json'); // Naglalagay ng JSON header
-    echo json_encode(['success' => true, 'message' => 'Reply added successfully']); // Nagbabalik ng success message
-    exit; // Humihinto ang script
+// Handle file upload if present
+$attachment = null;
+if (isset($_FILES['cmt_attachment']) && $_FILES['cmt_attachment']['error'] == 0) {
+    // File upload handling code...
+    // Validate file type, size, etc.
+    
+    $attachment = 'attachments/' . time() . '_' . $_FILES['cmt_attachment']['name'];
+    move_uploaded_file($_FILES['cmt_attachment']['tmp_name'], 'uploads/' . $attachment);
+}
+
+try {
+    // Insert the reply
+    $stmt = $db->prepare("
+        INSERT INTO tblcomments (cmt_content, cmt_isReply_to, cmt_added_by, cmt_attachment) 
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->execute([$content, $parent_id, $user_id, $attachment]);
+    
+    // Redirect back to the comments page
+    header('Location: comments.php');
+    exit;
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
 } 

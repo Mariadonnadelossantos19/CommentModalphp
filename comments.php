@@ -564,6 +564,74 @@ if (isset($_SESSION['flash_message'])) {
                 margin-top: 5px;
             }
         }
+        
+        /* Styling for "replied to" indicator */
+        .replied-to {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            padding-left: 5px;
+            border-left: 2px solid #e9ecef;
+        }
+        
+        .replied-to strong {
+            color: #4e73df;
+            font-weight: 600;
+        }
+        
+        /* Enhanced styling for nested replies */
+        .nested-reply-item .replied-to strong {
+            color: #36b9cc;
+        }
+        
+        /* Make reply counts more visible */
+        .reply-count {
+            display: inline-flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-left: 10px;
+        }
+        
+        .comment-item .reply-count {
+            background-color: rgba(78, 115, 223, 0.1);
+            color: #4e73df;
+            border: 1px solid rgba(78, 115, 223, 0.2);
+        }
+        
+        .reply-item .reply-count {
+            background-color: rgba(246, 194, 62, 0.1);
+            color: #f6c23e;
+            border: 1px solid rgba(246, 194, 62, 0.2);
+        }
+        
+        .nested-reply-item .reply-count {
+            background-color: rgba(54, 185, 204, 0.1);
+            color: #36b9cc;
+            border: 1px solid rgba(54, 185, 204, 0.2);
+        }
+        
+        /* Add a small icon to the reply count */
+        .reply-count:before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234e73df"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin-right: 5px;
+        }
+        
+        .reply-item .reply-count:before {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23f6c23e"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>');
+        }
+        
+        .nested-reply-item .reply-count:before {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2336b9cc"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>');
+        }
     </style>
 </head>
 <body class="<?php echo isset($_GET['iframe']) ? 'in-iframe' : ''; ?>">
@@ -669,6 +737,28 @@ if (isset($_SESSION['flash_message'])) {
                                                     </div>
                                                     <span class="reply-date"><?php echo formatDate($reply['created_at']); ?></span>
                                                 </div>
+                                                
+                                                <!-- Add the "replying to" indicator -->
+                                                <?php if($reply['cmt_isReply_to']): ?>
+                                                    <?php 
+                                                    // Get the user who was replied to
+                                                    $replied_to_stmt = $db->prepare("
+                                                        SELECT u.name as replied_to_user 
+                                                        FROM tblcomments c 
+                                                        LEFT JOIN users u ON c.cmt_added_by = u.id 
+                                                        WHERE c.cmt_id = ?
+                                                    ");
+                                                    $replied_to_stmt->execute([$reply['cmt_isReply_to']]);
+                                                    $replied_to = $replied_to_stmt->fetch(PDO::FETCH_ASSOC);
+                                                    
+                                                    if($replied_to):
+                                                    ?>
+                                                    <div class="replied-to">
+                                                        <span>Replying to <strong>@<?php echo htmlspecialchars($replied_to['replied_to_user']); ?></strong></span>
+                                                    </div>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                                
                                                 <div class="reply-text"><?php echo htmlspecialchars($reply['cmt_content']); ?></div>
                                                 <?php if($reply['cmt_attachment']): ?>
                                                     <div class="reply-attachment">
@@ -725,6 +815,26 @@ if (isset($_SESSION['flash_message'])) {
                                                                     </div>
                                                                     <span class="reply-date"><?php echo formatDate($nested_reply['created_at']); ?></span>
                                                                 </div>
+                                                                
+                                                                <!-- Add the "replying to" indicator for nested replies -->
+                                                                <?php 
+                                                                // Get the user who was replied to
+                                                                $replied_to_stmt = $db->prepare("
+                                                                    SELECT u.name as replied_to_user 
+                                                                    FROM tblcomments c 
+                                                                    LEFT JOIN users u ON c.cmt_added_by = u.id 
+                                                                    WHERE c.cmt_id = ?
+                                                                ");
+                                                                $replied_to_stmt->execute([$reply['cmt_id']]);
+                                                                $replied_to = $replied_to_stmt->fetch(PDO::FETCH_ASSOC);
+                                                                
+                                                                if($replied_to):
+                                                                ?>
+                                                                <div class="replied-to">
+                                                                    <span>Replying to <strong>@<?php echo htmlspecialchars($replied_to['replied_to_user']); ?></strong></span>
+                                                                </div>
+                                                                <?php endif; ?>
+                                                                
                                                                 <div class="reply-text"><?php echo htmlspecialchars($nested_reply['cmt_content']); ?></div>
                                                                 <?php if($nested_reply['cmt_attachment']): ?>
                                                                     <div class="reply-attachment">
