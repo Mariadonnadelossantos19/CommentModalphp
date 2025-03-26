@@ -176,6 +176,369 @@ if (isset($_SESSION['flash_message'])) {
     <title>Comments System</title>
     <link rel="stylesheet" href="css/comments.css">
     <style>
+        /* Base styles and layout fixes */
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Enhanced navbar */
+        .navbar {
+            background: linear-gradient(135deg, #4e73df 0%, #3a57c9 100%);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Improved comment form */
+        .add-comment-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .add-comment-section:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .comment-content, textarea.reply-content {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+            font-family: inherit;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .comment-content:focus, textarea.reply-content:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+            outline: none;
+        }
+        
+        /* Enhanced comment styling */
+        .comment-item, .reply-item, .nested-reply-item {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+        
+        .comment-item {
+            border-left: 4px solid #4e73df;
+        }
+        
+        .comment-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        /* Improved reply styling */
+        .reply-item {
+            margin-left: 40px;
+            border-left: 4px solid #f6c23e;
+            background-color: #fffdf7;
+        }
+        
+        .nested-reply-item {
+            margin-left: 40px;
+            border-left: 4px solid #36b9cc;
+            background-color: #f7fdff;
+        }
+        
+        /* Avatar styling */
+        .avatar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 45px;
+            min-height: 45px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+        }
+        
+        .comment-item .avatar {
+            background: linear-gradient(135deg, #4e73df 0%, #3a57c9 100%);
+            color: white;
+        }
+        
+        .reply-item .avatar {
+            background: linear-gradient(135deg, #f6c23e 0%, #e6b325 100%);
+            color: #5a4500;
+        }
+        
+        .nested-reply-item .avatar {
+            background: linear-gradient(135deg, #36b9cc 0%, #2aa3b9 100%);
+            color: white;
+        }
+        
+        /* Header and user info */
+        .comment-header, .reply-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .comment-date, .reply-date {
+            color: #6c757d;
+            font-size: 13px;
+            margin-left: auto;
+            white-space: nowrap;
+            font-style: italic;
+        }
+        
+        /* Comment and reply text */
+        .comment-text, .reply-text {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 15px;
+            word-break: break-word;
+            color: #2c3e50;
+        }
+        
+        /* Enhanced buttons and actions */
+        .btn, button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        
+        .reply-comment, .send-reply {
+            background: #4e73df;
+            color: white;
+            box-shadow: 0 2px 4px rgba(78, 115, 223, 0.2);
+        }
+        
+        .reply-comment:hover, .send-reply:hover {
+            background: #3a57c9;
+            box-shadow: 0 3px 6px rgba(78, 115, 223, 0.3);
+        }
+        
+        .cancel-reply {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #ddd;
+        }
+        
+        .cancel-reply:hover {
+            background: #e9ecef;
+        }
+        
+        .edit-comment, .edit-reply {
+            background: #36b9cc;
+            color: white;
+            margin-right: 8px;
+        }
+        
+        .edit-comment:hover, .edit-reply:hover {
+            background: #2aa3b9;
+        }
+        
+        .delete-comment, .delete-reply {
+            background: #e74a3b;
+            color: white;
+            margin-right: 8px;
+        }
+        
+        .delete-comment:hover, .delete-reply:hover {
+            background: #d52a1a;
+        }
+        
+        .reply {
+            background: #f6c23e;
+            color: #5a4500;
+            margin-right: 8px;
+        }
+        
+        .reply:hover {
+            background: #e6b325;
+        }
+        
+        .comment-actions, .reply-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        /* Reply count badge */
+        .reply-count {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .comment-item .reply-count {
+            background-color: rgba(78, 115, 223, 0.1);
+            color: #4e73df;
+            border: 1px solid rgba(78, 115, 223, 0.2);
+        }
+        
+        .reply-item .reply-count {
+            background-color: rgba(246, 194, 62, 0.1);
+            color: #b08000;
+            border: 1px solid rgba(246, 194, 62, 0.2);
+        }
+        
+        /* File upload styling */
+        input[type="file"] {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px dashed #ced4da;
+            background-color: #f8f9fa;
+            width: auto;
+            cursor: pointer;
+        }
+        
+        /* Attachment styling */
+        .comment-attachment a, .reply-attachment a {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            color: #4e73df;
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        
+        .comment-attachment a:hover, .reply-attachment a:hover {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-icon {
+            background-color: #f8d7da;
+            color: #e74a3b;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        
+        .modal-title {
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .btn-cancel {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+        }
+        
+        .btn-delete {
+            background-color: #e74a3b;
+            color: white;
+            padding: 10px 20px;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #4e73df;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1001;
+            font-weight: 500;
+        }
+        
         /* Hide navbar when in iframe */
         body.in-iframe .navbar {
             display: none;
@@ -185,54 +548,21 @@ if (isset($_SESSION['flash_message'])) {
             padding-top: 0;
         }
         
-        /* New styles for positioning the date in replies */
-        .reply-content {
-            position: relative;
-        }
-        
-        .reply-date {
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            font-size: 0.8rem;
-            color: #777;
-        }
-        
-        /* Adjust header layout to make room for the date */
-        .reply-header {
-            padding-right: 110px; /* Make room for the date */
-        }
-        
-        /* Center the letter inside the avatar circle */
-        .avatar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            line-height: 1;
-        }
-        
-        /* Style for reply counts */
-        .reply-count {
-            display: inline-block;
-            background-color: #e9ecef;
-            color: #495057;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-left: 8px;
-            border: 1px solid #ced4da;
-        }
-        
-        .comment-item .reply-count {
-            background-color: #e3f2fd; /* Light blue for comments */
-            border-color: #bbdefb;
-        }
-        
-        .reply-item .reply-count {
-            background-color: #fff3e0; /* Light orange for replies */
-            border-color: #ffe0b2;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .reply-item, .nested-reply-item {
+                margin-left: 20px;
+            }
+            
+            .comment-header, .reply-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .comment-date, .reply-date {
+                margin-left: 0;
+                margin-top: 5px;
+            }
         }
     </style>
 </head>
