@@ -199,14 +199,15 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
         document.getElementById(modalId).style.display = 'none';
     }
 
-    function showToast(message, duration = 3000) {
+    function showToast(message, type = 'success') {
         const toast = document.getElementById('successToast');
         toast.textContent = message;
+        toast.className = 'toast ' + type;
         toast.style.display = 'block';
         
         setTimeout(() => {
             toast.style.display = 'none';
-        }, duration);
+        }, 3000);
     }
 
     // Update the delete button handler
@@ -288,5 +289,61 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
                 });
             }
         });
+    });
+
+    // When a form is submitted for edit
+    document.body.addEventListener('submit', function(e) {
+        if (e.target.classList.contains('edit-form')) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            const contentDiv = form.closest('.comment-text, .reply-text');
+            const item = form.closest('.comment-item, .reply-item');
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Replace the form with the updated content
+                    contentDiv.innerHTML = data.content || formData.get('content');
+                    
+                    // Update attachment if needed
+                    if (data.attachment) {
+                        let attachmentDiv = item.querySelector('.comment-attachment, .reply-attachment');
+                        if (!attachmentDiv) {
+                            attachmentDiv = document.createElement('div');
+                            attachmentDiv.className = item.classList.contains('comment-item') ? 
+                                'comment-attachment' : 'reply-attachment';
+                            contentDiv.after(attachmentDiv);
+                        }
+                        attachmentDiv.innerHTML = `<a href="${data.attachment}" target="_blank">View Attachment</a>`;
+                    } else {
+                        // Remove attachment div if attachment was removed
+                        const attachmentDiv = item.querySelector('.comment-attachment, .reply-attachment');
+                        if (attachmentDiv) {
+                            attachmentDiv.remove();
+                        }
+                    }
+                    
+                    // Show success message
+                    showToast('Comment updated successfully', 'success');
+                } else {
+                    showToast(data.message || 'Error updating comment', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while updating', 'error');
+            });
+        }
     });
 }); 

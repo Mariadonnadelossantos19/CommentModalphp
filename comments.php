@@ -68,7 +68,7 @@ function getReplies($db, $comment_id) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// New function to count replies
+// Add this function after the getReplies function
 function getReplyCount($db, $comment_id) {
     $stmt = $db->prepare("
         SELECT COUNT(*) as count
@@ -212,55 +212,27 @@ if (isset($_SESSION['flash_message'])) {
             line-height: 1;
         }
         
-        /* Add background colors to distinguish comments and replies */
-        .comment-item {
-            background-color: #f0f7ff; /* Light blue for main comments */
-            border-radius: 8px;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px solid #e0e0ff;
-        }
-        
-        .reply-item {
-            background-color: #fff7f0; /* Light orange/peach for direct replies */
-            border-radius: 8px;
-            margin-bottom: 10px;
-            margin-left: 25px;
-            padding: 10px;
-            border: 1px solid #ffe0d0;
-        }
-        
-        .nested-reply-item {
-            background-color: #f0fff7; /* Light mint/green for nested replies */
-            border-radius: 8px;
-            margin-bottom: 8px;
-            margin-left: 25px;
-            padding: 10px;
-            border: 1px solid #d0ffe0;
-        }
-        
-        /* Add some spacing between comment sections */
-        .replies-container {
-            margin-top: 10px;
-        }
-        
-        .nested-replies-container {
-            margin-top: 10px;
-        }
-        
         /* Style for reply counts */
         .reply-count {
-            font-size: 0.8rem;
-            color: #555;
-            background-color: #f0f0f0;
+            display: inline-block;
+            background-color: #e9ecef;
+            color: #495057;
+            font-size: 0.75rem;
+            font-weight: bold;
             padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 10px;
+            border-radius: 12px;
+            margin-left: 8px;
+            border: 1px solid #ced4da;
         }
         
-        /* Add hover effect to reply count */
-        .reply-count:hover {
-            background-color: #e0e0e0;
+        .comment-item .reply-count {
+            background-color: #e3f2fd; /* Light blue for comments */
+            border-color: #bbdefb;
+        }
+        
+        .reply-item .reply-count {
+            background-color: #fff3e0; /* Light orange for replies */
+            border-color: #ffe0b2;
         }
     </style>
 </head>
@@ -326,8 +298,14 @@ if (isset($_SESSION['flash_message'])) {
                                         <button class="delete-comment">Delete</button>
                                     <?php endif; ?>
                                     <button class="reply">Reply</button>
-                                    <?php $replyCount = getReplyCount($db, $comment['cmt_id']); ?>
+                                    
+                                    <!-- Add the reply count here -->
+                                    <?php 
+                                    $replyCount = getReplyCount($db, $comment['cmt_id']); 
+                                    if ($replyCount > 0):
+                                    ?>
                                     <span class="reply-count"><?php echo $replyCount; ?> <?php echo $replyCount == 1 ? 'reply' : 'replies'; ?></span>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Reply Form for this comment -->
@@ -375,8 +353,14 @@ if (isset($_SESSION['flash_message'])) {
                                                         <button class="delete-reply">Delete</button>
                                                     <?php endif; ?>
                                                     <button class="btn reply">Reply</button>
-                                                    <?php $nestedReplyCount = getReplyCount($db, $reply['cmt_id']); ?>
+                                                    
+                                                    <!-- Add the reply count here -->
+                                                    <?php 
+                                                    $nestedReplyCount = getReplyCount($db, $reply['cmt_id']); 
+                                                    if ($nestedReplyCount > 0):
+                                                    ?>
                                                     <span class="reply-count"><?php echo $nestedReplyCount; ?> <?php echo $nestedReplyCount == 1 ? 'reply' : 'replies'; ?></span>
+                                                    <?php endif; ?>
                                                 </div>
 
                                                 <!-- Add nested reply form -->
