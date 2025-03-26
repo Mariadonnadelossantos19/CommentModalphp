@@ -213,32 +213,25 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
     // Update the delete button handler
     document.querySelectorAll('.delete-comment, .delete-reply').forEach(button => {
         button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const commentItem = this.closest('.comment-item, .reply-item');
+            const commentItem = this.closest('.comment-item, .reply-item, .nested-reply-item');
+            const isReply = this.classList.contains('delete-reply') ? 1 : 0;
+            const commentId = commentItem.dataset.commentId || commentItem.dataset.replyId;
+            
+            // Show confirmation dialog
             const deleteModal = document.getElementById('deleteModal');
-            const confirmDelete = document.getElementById('confirmDelete');
-            const cancelDelete = document.getElementById('cancelDelete');
-
-            // Show the modal
             deleteModal.classList.add('show');
-
-            // Close modal when clicking outside
-            window.onclick = function(e) {
-                if (e.target === deleteModal) {
-                    deleteModal.classList.remove('show');
-                }
-            };
-
+            
             // Handle cancel
-            cancelDelete.onclick = function() {
+            document.getElementById('cancelDelete').onclick = function() {
                 deleteModal.classList.remove('show');
             };
-
+            
             // Handle confirm
-            confirmDelete.onclick = function() {
+            document.getElementById('confirmDelete').onclick = function() {
                 const formData = new FormData();
-                formData.append('comment_id', commentItem.dataset.commentId || commentItem.dataset.replyId);
-
+                formData.append('comment_id', commentId);
+                formData.append('is_reply', isReply);
+                
                 fetch('delete_comment.php', {
                     method: 'POST',
                     body: formData
@@ -246,7 +239,31 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Remove the comment/reply item
                         commentItem.remove();
+                        
+                        // Update reply count if this was a reply
+                        if (data.parent_id) {
+                            const parentComment = document.querySelector(`.comment-item[data-comment-id="${data.parent_id}"], .reply-item[data-reply-id="${data.parent_id}"]`);
+                            if (parentComment) {
+                                let countSpan = parentComment.querySelector('.reply-count');
+                                
+                                if (data.new_count > 0) {
+                                    // Update existing count span or create a new one
+                                    if (!countSpan) {
+                                        countSpan = document.createElement('span');
+                                        countSpan.className = 'reply-count';
+                                        parentComment.querySelector('.comment-actions, .reply-actions').appendChild(countSpan);
+                                    }
+                                    countSpan.textContent = data.new_count + (data.new_count === 1 ? ' reply' : ' replies');
+                                } else if (countSpan) {
+                                    // Remove count span if zero replies
+                                    countSpan.remove();
+                                }
+                            }
+                        }
+                        
+                        // Hide modal
                         deleteModal.classList.remove('show');
                         showToast('Comment deleted successfully');
                     } else {

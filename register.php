@@ -14,58 +14,110 @@
 session_start();
 require_once 'config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
-    $name = $_POST['name']; // Kinukuha ang name mula sa form
-    $email = $_POST['email']; // Kinukuha ang email mula sa form
-    $password = $_POST['password']; // Kinukuha ang password mula sa form
-    $confirm_password = $_POST['confirm_password']; // Kinukuha ang password confirmation
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
     
-    // Basic validation
-    $errors = []; // Array para sa error messages
+    // Validate inputs
+    $errors = [];
     
-    if (empty($name)) { // Checking kung walang name
-        $errors[] = "Name is required"; // Nagdadagdag ng error message
+    if (empty($name)) {
+        $errors[] = "Name is required";
     }
     
-    if (empty($email)) { // Checking kung walang email
-        $errors[] = "Email is required"; // Nagdadagdag ng error message
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { // Checking kung valid ang email format
-        $errors[] = "Invalid email format"; // Nagdadagdag ng error message
+    if (empty($email)) {
+        $errors[] = "Email is required";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid email format";
     }
     
-    if (empty($password)) { // Checking kung walang password
-        $errors[] = "Password is required"; // Nagdadagdag ng error message
-    } elseif (strlen($password) < 6) { // Checking kung masyadong maikli ang password
-        $errors[] = "Password must be at least 6 characters"; // Nagdadagdag ng error message
+    // Check if username is empty
+    if (empty($username)) {
+        $errors[] = "Username is required";
+    } else {
+        // Check if username already exists
+        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        if ($stmt->rowCount() > 0) {
+            $errors[] = "Username already taken";
+        }
     }
     
-    if ($password !== $confirm_password) { // Checking kung hindi match ang passwords
-        $errors[] = "Passwords do not match"; // Nagdadagdag ng error message
+    if (empty($password)) {
+        $errors[] = "Password is required";
+    } elseif (strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters";
     }
     
-    // Check if email already exists
-    $stmt = $db->prepare("SELECT * FROM users WHERE email = ?"); // Query para i-check kung may existing user
-    $stmt->execute([$email]); // Nag-e-execute ng query
-    $user = $stmt->fetch(); // Kinukuha ang result
-    
-    if ($user) { // Checking kung may existing user na
-        $errors[] = "Email already in use"; // Nagdadagdag ng error message
+    if ($password !== $confirm_password) {
+        $errors[] = "Passwords do not match";
     }
     
-    // If no errors, register the user
+    // Process avatar upload
+    $avatar = null;
+    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $filename = $_FILES['avatar']['name'];
+        $filetype = pathinfo($filename, PATHINFO_EXTENSION);
+        
+        // Validate file extension
+        if (!in_array(strtolower($filetype), $allowed)) {
+            $errors[] = "Invalid file format. Only JPG, JPEG, PNG and GIF files are allowed.";
+        }
+        
+        // Validate file size (max 2MB)
+        if ($_FILES['avatar']['size'] > 2 * 1024 * 1024) {
+            $errors[] = "File size exceeds limit of 2MB.";
+        }
+        
+        if (empty($errors)) {
+            // Create uploads directory if it doesn't exist
+            if (!file_exists('uploads/avatars/')) {
+                mkdir('uploads/avatars/', 0755, true);
+            }
+            
+            // Generate unique filename
+            $avatar = time() . '_' . basename($filename);
+            $target = 'uploads/avatars/' . $avatar;
+            
+            // Upload file
+            if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $target)) {
+                $errors[] = "Failed to upload avatar.";
+                $avatar = null;
+            }
+        }
+    }
+    
     if (empty($errors)) {
+        // Hash the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         
-        $stmt = $db->prepare("INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, NOW())");
-        $success = $stmt->execute([$name, $email, $hashed_password]);
-        
-        if ($success) {
-            $_SESSION['success_message'] = "Registration successful! You can now login.";
-            header('Location: login.php');
+        try {
+            // Insert user into database
+            $stmt = $db->prepare("INSERT INTO users (name, email, username, password, avatar) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $email, $username, $hashed_password, $avatar]);
+            
+            $_SESSION['flash_message'] = "Registration successful! You can now log in.";
+            $_SESSION['flash_type'] = "success";
+            header("Location: login.php");
             exit;
-        } else {
-            $errors[] = "Registration failed. Please try again.";
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23000') {
+                // This handles the duplicate entry error
+                $errors[] = "Username or email is already registered";
+            } else {
+                $errors[] = "Database error: " . $e->getMessage();
+            }
         }
+    }
+    
+    // If there are errors, store them in session
+    if (!empty($errors)) {
+        $_SESSION['flash_message'] = implode('<br>', $errors);
+        $_SESSION['flash_type'] = "error";
     }
 }
 ?>
@@ -140,6 +192,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
             margin-bottom: 0;
             padding-left: 20px;
         }
+        .avatar-upload {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .avatar-upload .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #f3f3f3;
+            border: 2px solid #e0e0e0;
+            margin: 0 auto 10px;
+            position: relative;
+            background-image: url('assets/images/default-avatar.png');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .avatar-upload .avatar-edit {
+            position: relative;
+            margin-top: 10px;
+        }
+        
+        .avatar-upload .avatar-edit input {
+            display: none;
+        }
+        
+        .avatar-upload .avatar-edit label {
+            display: inline-block;
+            width: 34px;
+            height: 34px;
+            background: #28a745;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            line-height: 34px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        
+        .avatar-text {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .form-container {
+            max-width: 500px;
+            padding: 30px;
+        }
+        
+        .icon {
+            color: #28a745;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -150,17 +259,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
                 <h4 class="mb-0">Create an Account</h4>
             </div>
             <div class="card-body p-4">
-                <?php if (!empty($errors)): ?>
-                    <div class="alert alert-danger">
-                        <ul>
-                            <?php foreach ($errors as $error): ?>
-                                <li><?php echo $error; ?></li>
-                            <?php endforeach; ?>
-                        </ul>
+                <?php if (isset($_SESSION['flash_message'])): ?>
+                    <div class="alert <?php echo $_SESSION['flash_type']; ?>">
+                        <?php 
+                        echo $_SESSION['flash_message']; 
+                        unset($_SESSION['flash_message']);
+                        unset($_SESSION['flash_type']);
+                        ?>
                     </div>
                 <?php endif; ?>
                 
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview"></div>
+                        <div class="avatar-edit">
+                            <input type="file" id="avatarUpload" name="avatar" accept=".png, .jpg, .jpeg, .gif">
+                            <label for="avatarUpload">+</label>
+                            <span class="avatar-text">Upload Avatar (Optional)</span>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="name" class="form-label">Full Name</label>
                         <div class="input-group">
@@ -173,6 +291,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                             <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" value="<?php echo isset($username) ? htmlspecialchars($username) : ''; ?>" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -203,5 +328,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
     
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Preview avatar image before upload
+        document.getElementById('avatarUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').style.backgroundImage = `url(${e.target.result})`;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 </body>
 </html> 

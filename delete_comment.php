@@ -53,6 +53,31 @@ if ($comment['cmt_added_by'] != $user_id) { // Nagche-check kung hindi sa user a
 $stmt = $db->prepare("DELETE FROM tblcomments WHERE cmt_id = ?"); // Query para i-delete ang comment
 $success = $stmt->execute([$comment_id]); // Nag-e-execute ng query, at nag-store ng result
 
+// Get the parent comment ID if this was a reply
+$parent_id = null;
+if (isset($_POST['is_reply']) && $_POST['is_reply'] == 1) {
+    $parent_stmt = $db->prepare("SELECT cmt_isReply_to FROM tblcomments WHERE cmt_id = ?");
+    $parent_stmt->execute([$comment_id]);
+    $parent_data = $parent_stmt->fetch(PDO::FETCH_ASSOC);
+    if ($parent_data && $parent_data['cmt_isReply_to']) {
+        $parent_id = $parent_data['cmt_isReply_to'];
+    }
+}
+
+// Get updated reply count
+$new_count = 0;
+if ($parent_id) {
+    $count_stmt = $db->prepare("SELECT COUNT(*) as count FROM tblcomments WHERE cmt_isReply_to = ?");
+    $count_stmt->execute([$parent_id]);
+    $count_data = $count_stmt->fetch(PDO::FETCH_ASSOC);
+    $new_count = $count_data['count'];
+}
+
 header('Content-Type: application/json'); // Naglalagay ng JSON header
-echo json_encode(['success' => $success]); // Nagbabalik ng result
+echo json_encode([
+    'success' => true, 
+    'message' => 'Comment deleted successfully',
+    'parent_id' => $parent_id,
+    'new_count' => $new_count
+]); // Nagbabalik ng result
 ?> 
