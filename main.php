@@ -33,13 +33,54 @@ function formatDate($date) {
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background-color: #f5f5f5;
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: #343a40;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar .user-name {
+            font-size: 1rem;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
         }
 
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 30px auto;
             background: white;
             padding: 20px;
             border-radius: 8px;
@@ -166,35 +207,20 @@ function formatDate($date) {
             height: calc(100% - 20px);
             border: none;
         }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .logout-btn {
-            background-color: #dc3545;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .logout-btn:hover {
-            background-color: #c82333;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h1>
+    <!-- New Navbar -->
+    <div class="navbar">
+        <div class="brand">Comment System</div>
+        <div class="user-info">
+            <div class="user-name">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></div>
             <a href="logout.php" class="logout-btn">Logout</a>
         </div>
+    </div>
+
+    <div class="container">
+        <h1>Comment Button</h1>
         
         <!-- Comment button with last comment -->
         <button class="comment-button" id="openComments">
