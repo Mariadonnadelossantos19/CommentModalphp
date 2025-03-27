@@ -481,55 +481,33 @@ if (isset($_SESSION['flash_message'])) {
             border-radius: 10px;
             padding: 30px;
             max-width: 500px;
-            width: 100%;
-            text-align: center;
+            width: 90%;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
         }
         
-        .modal-icon {
-            background-color: #f8d7da;
-            color: #e74a3b;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 30px;
-            font-weight: bold;
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
         
-        .modal-title {
-            margin-bottom: 25px;
-            color: #2c3e50;
-        }
-        
-        .modal-actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        
-        .btn-cancel {
-            background-color: #f8f9fa;
-            color: #6c757d;
-            border: 1px solid #ddd;
+        /* Make sure buttons look consistent */
+        .modal .btn {
             padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
         }
         
-        .btn-delete {
-            background-color: #e74a3b;
-            color: white;
-            padding: 10px 20px;
-        }
-        
-        /* Toast notification */
+        /* Improve success toast */
         .toast {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background-color: #4e73df;
+            background-color: #4CAF50;
             color: white;
             padding: 15px 25px;
             border-radius: 8px;
@@ -537,6 +515,12 @@ if (isset($_SESSION['flash_message'])) {
             display: none;
             z-index: 1001;
             font-weight: 500;
+            animation: toastFadeIn 0.3s ease;
+        }
+        
+        @keyframes toastFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Hide navbar when in iframe */
@@ -691,9 +675,9 @@ if (isset($_SESSION['flash_message'])) {
                                     </div>
                                 <?php endif; ?>
                                 <div class="comment-actions">
-                                    <?php if($comment['cmt_added_by'] == $_SESSION['user_id']): ?>
-                                        <button class="edit-comment">Edit</button>
-                                        <button class="delete-comment">Delete</button>
+                                    <?php if($comment['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
+                                        <a href="edit_comment.php?id=<?php echo $comment['cmt_id']; ?>" class="edit-comment">Edit</a>
+                                        <a href="delete_comment.php?id=<?php echo $comment['cmt_id']; ?>" class="delete-comment">Delete</a>
                                     <?php endif; ?>
                                     <button class="reply">Reply</button>
                                     
@@ -769,8 +753,8 @@ if (isset($_SESSION['flash_message'])) {
                                                 <?php endif; ?>
                                                 <div class="reply-actions">
                                                     <?php if ($reply['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
-                                                        <button class="edit-reply" data-id="<?php echo $reply['cmt_id']; ?>">Edit</button>
-                                                        <button class="delete-reply" data-id="<?php echo $reply['cmt_id']; ?>">Delete</button>
+                                                        <a href="edit_comment.php?id=<?php echo $reply['cmt_id']; ?>" class="edit-reply">Edit</a>
+                                                        <a href="delete_comment.php?id=<?php echo $reply['cmt_id']; ?>" class="delete-reply">Delete</a>
                                                     <?php endif; ?>
                                                     <button class="btn reply-button" data-id="<?php echo $reply['cmt_id']; ?>" data-parent="<?php echo $comment['cmt_id']; ?>">Reply</button>
                                                     
@@ -845,8 +829,8 @@ if (isset($_SESSION['flash_message'])) {
                                                                 <?php endif; ?>
                                                                 <div class="reply-actions">
                                                                     <?php if ($nested_reply['cmt_added_by'] == $_SESSION['user_id'] || $is_admin): ?>
-                                                                        <button class="edit-reply" data-id="<?php echo $nested_reply['cmt_id']; ?>">Edit</button>
-                                                                        <button class="delete-reply" data-id="<?php echo $nested_reply['cmt_id']; ?>">Delete</button>
+                                                                        <a href="edit_comment.php?id=<?php echo $nested_reply['cmt_id']; ?>" class="edit-reply">Edit</a>
+                                                                        <a href="delete_comment.php?id=<?php echo $nested_reply['cmt_id']; ?>" class="delete-reply">Delete</a>
                                                                     <?php endif; ?>
                                                                     <button class="btn reply-button" data-id="<?php echo $nested_reply['cmt_id']; ?>" data-parent="<?php echo $reply['cmt_id']; ?>" data-top="<?php echo $comment['cmt_id']; ?>">Reply</button>
                                                                 </div>
@@ -898,5 +882,16 @@ if (isset($_SESSION['flash_message'])) {
 
     <!-- Success Toast -->
     <div id="successToast" class="toast"></div>
+
+    <!-- Simple Clean Edit Modal - Exact Design Match -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <textarea id="editCommentText" required></textarea>
+            <div class="modal-actions">
+                <button type="button" id="saveEdit" class="btn">Save</button>
+                <button type="button" id="cancelEdit" class="btn">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

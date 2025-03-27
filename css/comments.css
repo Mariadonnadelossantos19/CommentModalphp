@@ -287,97 +287,107 @@ textarea.comment-content:focus {
     color: var(--text-color);
 }
 
-/* Modal styles - simplified */
+/* Edit Modal Styling - Exact Design Match */
 .modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-}
-
-.modal.show {
-    display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .modal-content {
-    background: white;
-    width: 90%;
-    max-width: 350px;
-    padding: 24px;
-    border-radius: var(--radius-md);
-    text-align: center;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    max-width: 90%;
+    padding: 16px;
 }
 
-.modal-icon {
-    width: 48px;
-    height: 48px;
-    background: #FEE2E2;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 16px;
+.modal-content textarea {
+    width: 100%;
+    height: 80px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: none;
+    margin-bottom: 16px;
 }
 
-.exclamation {
-    color: var(--danger-color);
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.modal-title {
-    color: var(--text-color);
-    font-size: 16px;
-    margin: 0 0 20px;
-    font-weight: 500;
+.modal-content textarea:focus {
+    outline: none;
+    border-color: #aaa;
 }
 
 .modal-actions {
     display: flex;
-    gap: 10px;
     justify-content: center;
+    gap: 10px;
 }
 
-.btn-cancel, .btn-delete {
-    min-width: 100px;
-    padding: 8px 16px;
-}
-
-.btn-cancel {
-    background: #f3f4f6;
-    color: var(--text-color);
-}
-
-.btn-delete {
-    background: var(--danger-color);
-    color: white;
-}
-
-/* Toast notification - simplified */
-#successToast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    padding: 12px 20px;
-    border-radius: var(--radius-md);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    font-weight: 500;
+.btn {
+    min-width: 80px;
+    padding: 8px 12px;
+    border-radius: 4px;
     font-size: 14px;
-    max-width: 300px;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    cursor: pointer;
+    background-color: #f0f0f0;
+    border: none;
+    color: #000;
+}
+
+.btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* Toast for notifications */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    display: none;
+}
+
+.toast.show {
+    display: block;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 576px) {
+    .modal-content {
+        max-width: 100%;
+        margin: 0 10px;
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-footer {
+        padding: 15px 20px;
+    }
+    
+    .btn {
+        padding: 10px 16px;
+    }
 }
 
 /* File upload - simplified */

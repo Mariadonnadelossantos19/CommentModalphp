@@ -16,29 +16,70 @@ session_start(); // Nagsisimula ng session para sa user authentication
 require_once 'config/database.php'; // Nag-lo-load ng database connection
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) { // Nagche-check kung may user_id sa session
-    echo json_encode(['success' => false, 'message' => 'User not authenticated']); // Nagbabalik ng error message kung hindi naka-login
-    exit; // Humihinto ang script kung hindi naka-login
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error'] = "You must be logged in to add comments.";
+    header('Location: comments.php');
+    exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Checking kung POST request
-    $content = $_POST['cmt_content']; // Kinukuha ang comment content mula sa form
-    $funding_id = $_POST['cmt_fnd_id']; // Kinukuha ang funding ID na kino-comment-an
-    $added_by = $_SESSION['user_id']; // Kinukuha ang ID ng user mula sa session
-    $attachment = null; // Nagseset ng default value para sa attachment
+// Validate the comment content
+if (empty($_POST['cmt_content'])) {
+    $_SESSION['error'] = "Comment content cannot be empty.";
+    header('Location: comments.php');
+    exit;
+}
 
-    // Handle file upload
-    if (isset($_FILES['cmt_attachment']) && $_FILES['cmt_attachment']['error'] === 0) { // Checking kung may na-upload na file
-        $upload_dir = 'uploads/'; // Folder kung saan ilalagay ang files
-        $file_name = uniqid() . '_' . $_FILES['cmt_attachment']['name']; // Unique filename para sa attachment
-        move_uploaded_file($_FILES['cmt_attachment']['tmp_name'], $upload_dir . $file_name); // Nagli-lipat ng file sa uploads folder
-        $attachment = $file_name; // Nag-sa-save ng filename sa variable
+// Check if the database connection is working
+if (!isset($conn) || !$conn) {
+    $_SESSION['error'] = "Database connection failed: " . mysqli_connect_error();
+    header('Location: comments.php');
+    exit;
+}
+
+// Handle file upload if present
+$attachment = '';
+if (isset($_FILES['cmt_attachment']) && $_FILES['cmt_attachment']['error'] === UPLOAD_ERR_OK) {
+    $upload_dir = 'uploads/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
     }
+    
+    $file_name = uniqid() . '_' . basename($_FILES['cmt_attachment']['name']);
+    $target_path = $upload_dir . $file_name;
+    
+    if (move_uploaded_file($_FILES['cmt_attachment']['tmp_name'], $target_path)) {
+        $attachment = $file_name;
+    } else {
+        $_SESSION['error'] = "Error uploading file.";
+        header('Location: comments.php');
+        exit;
+    }
+}
 
-    $stmt = $db->prepare("INSERT INTO tblcomments (cmt_fnd_id, cmt_content, cmt_attachment, cmt_added_by, created_at) VALUES (?, ?, ?, ?, NOW())"); // Naghahanda ng SQL query para mag-save ng comment
-    $stmt->execute([$funding_id, $content, $attachment, $added_by]); // Nag-e-execute ng query kasama ang data
+try {
+    // Sanitize inputs
+    $content = mysqli_real_escape_string($conn, $_POST['cmt_content']);
+    $user_id = (int)$_SESSION['user_id'];
+    $attachment = mysqli_real_escape_string($conn, $attachment);
+    $fund_id = isset($_POST['cmt_fnd_id']) ? (int)$_POST['cmt_fnd_id'] : 1;
+    
+    // Insert the comment
+    $query = "INSERT INTO tblcomments (cmt_content, cmt_added_by, cmt_attachment, created_at) 
+              VALUES ('$content', $user_id, '$attachment', NOW())";
+    
+    if (mysqli_query($conn, $query)) {
+        $_SESSION['success'] = "Comment added successfully.";
+    } else {
+        $_SESSION['error'] = "Error adding comment: " . mysqli_error($conn);
+    }
+    
+} catch (Exception $e) {
+    $_SESSION['error'] = "Error: " . $e->getMessage();
+}
 
-    header('Content-Type: application/json'); // Naglalagay ng JSON header sa response
-    echo json_encode(['success' => true, 'message' => 'Comment added successfully']); // Nagbabalik ng success message sa JSON format
-    exit; // Humihinto ang script pagkatapos mag-save
-} 
+// Redirect back to comments page
+header('Location: comments.php');
+exit;
+?> 
