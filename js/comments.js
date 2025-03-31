@@ -163,31 +163,44 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
     });
 
     // ------- DELETE COMMENT FUNCTIONALITY -------
-    // Handle delete button clicks
+    // Open delete modal when delete button is clicked
     document.querySelectorAll('.delete-comment, .delete-reply').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Get the comment or reply element
+            // Get the comment element and ID
             const commentItem = this.closest('.comment-item, .reply-item, .nested-reply-item');
-            
-            // Set the current comment ID and element
             currentCommentId = this.dataset.id || commentItem.dataset.commentId || commentItem.dataset.replyId;
             currentCommentElement = commentItem;
             
-            // Show the delete modal
+            // Show the modal
             deleteModal.style.display = 'flex';
         });
     });
     
-    // Cancel delete
-    document.getElementById('cancelDelete').addEventListener('click', function() {
+    // Close modal function
+    function closeDeleteModal() {
         deleteModal.style.display = 'none';
+    }
+    
+    // Close on Cancel button click
+    const cancelDeleteBtn = document.getElementById('cancelDelete');
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    
+    // Close on outside click
+    window.addEventListener('click', function(e) {
+        if (e.target === deleteModal) {
+            closeDeleteModal();
+        }
     });
     
-    // Confirm delete
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        // Create form data for the AJAX request
+    // Confirm delete button click
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    confirmDeleteBtn.addEventListener('click', function() {
+        // Show loading state
+        confirmDeleteBtn.textContent = 'Deleting...';
+        confirmDeleteBtn.disabled = true;
+        
         const formData = new FormData();
         formData.append('comment_id', currentCommentId);
         
@@ -200,24 +213,32 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
         })
         .then(response => response.json())
         .then(data => {
+            // Reset button
+            confirmDeleteBtn.textContent = 'Delete';
+            confirmDeleteBtn.disabled = false;
+            
             if (data.success) {
                 // Remove the comment from the DOM
-                currentCommentElement.remove();
+                if (currentCommentElement) {
+                    currentCommentElement.remove();
+                }
                 
-                // Hide the modal
-                deleteModal.style.display = 'none';
+                // Close modal
+                closeDeleteModal();
                 
                 // Show success message
-                showToast(data.message || 'Comment deleted successfully');
+                showToast('Comment deleted successfully');
             } else {
-                alert(data.message || 'Error deleting comment');
-                deleteModal.style.display = 'none';
+                showToast(data.message || 'Error deleting comment');
+                closeDeleteModal();
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting the comment');
-            deleteModal.style.display = 'none';
+            confirmDeleteBtn.textContent = 'Delete';
+            confirmDeleteBtn.disabled = false;
+            showToast('An error occurred while deleting the comment');
+            closeDeleteModal();
         });
     });
 
@@ -250,31 +271,122 @@ document.addEventListener('DOMContentLoaded', function() { // Nagse-setup ng eve
         });
     });
     
-    // Simple toast notification
+    // Toast notification function
     function showToast(message) {
-        // Remove any existing toasts
-        const existingToasts = document.querySelectorAll('.toast');
-        existingToasts.forEach(t => t.remove());
+        successToast.textContent = message;
+        successToast.style.display = 'block';
         
-        // Create new toast
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        // Show toast
         setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        
-        // Hide after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    document.body.removeChild(toast);
-                }
-            }, 300);
+            successToast.style.display = 'none';
         }, 3000);
     }
+
+    // Comment and Reply Success Notification
+    const successModal = document.getElementById('successModal');
+    const successMessage = document.getElementById('successMessage');
+    const successOkBtn = document.getElementById('successOk');
+    
+    // Close success modal function
+    function closeSuccessModal() {
+        successModal.style.display = 'none';
+    }
+    
+    // Close on OK button click
+    successOkBtn.addEventListener('click', closeSuccessModal);
+    
+    // Close on outside click
+    window.addEventListener('click', function(e) {
+        if (e.target === successModal) {
+            closeSuccessModal();
+        }
+    });
+    
+    // Show success modal with custom message
+    function showSuccessModal(message) {
+        successMessage.textContent = message || 'Your submission was successful.';
+        successModal.style.display = 'flex';
+    }
+    
+    // Handle comment form submission
+    const commentForm = document.querySelector('.add-comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('add_comment.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset form
+                    this.reset();
+                    
+                    // Show success message
+                    showSuccessModal('Your comment has been submitted successfully.');
+                    
+                    // Reload comments after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert(data.message || 'Error submitting comment');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting your comment');
+            });
+        });
+    }
+    
+    // Handle reply form submissions
+    document.querySelectorAll('.reply-form form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const replyForm = this.closest('.reply-form');
+            
+            fetch('add_reply.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset form
+                    this.reset();
+                    
+                    // Hide the reply form
+                    if (replyForm) {
+                        replyForm.style.display = 'none';
+                    }
+                    
+                    // Show success message
+                    showSuccessModal('Your reply has been submitted successfully.');
+                    
+                    // Reload comments after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert(data.message || 'Error submitting reply');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting your reply');
+            });
+        });
+    });
 }); 

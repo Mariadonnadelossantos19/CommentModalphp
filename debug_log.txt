@@ -1,0 +1,64 @@
+2025-03-31 02:17:11: Edit comment request started
+2025-03-31 02:17:11: Processing comment ID: 391, User ID: 24
+2025-03-31 02:17:11: Found comment. Owner: 24, Attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:17:11: Current attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:17:11: Updating comment with attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:17:11: Comment updated successfully
+2025-03-31 02:18:01: Edit comment request started
+2025-03-31 02:18:01: Processing comment ID: 391, User ID: 24
+2025-03-31 02:18:01: Found comment. Owner: 24, Attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:18:01: Current attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:18:01: Updating comment with attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:18:01: Comment updated successfully
+2025-03-31 02:18:15: Edit comment request started
+2025-03-31 02:18:15: Processing comment ID: 391, User ID: 24
+2025-03-31 02:18:16: Found comment. Owner: 24, Attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:18:16: Current attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:18:16: Updating comment with attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:18:16: Comment updated successfully
+2025-03-31 02:20:36: --- Edit comment request started ---
+2025-03-31 02:20:36: POST data: {"comment_id":"391","content":"kmaust?"}
+2025-03-31 02:20:36: FILES data: []
+2025-03-31 02:20:36: Processing comment ID: 391, User ID: 24
+2025-03-31 02:20:36: Created directory: uploads/attachments
+2025-03-31 02:20:36: Found comment. Owner: 24, Attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:20:36: Current attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:20:36: Updating comment with attachment: 67e9dd3a84861_letter of intent.png
+2025-03-31 02:20:36: Comment updated successfully
+2025-03-31 02:20:36: --- Edit comment request completed ---
+2025-03-31 02:20:47: --- Edit comment request started ---
+2025-03-31 02:20:47: POST data: {"comment_id":"393","content":"helll po"}
+2025-03-31 02:20:47: FILES data: []
+2025-03-31 02:20:47: Processing comment ID: 393, User ID: 24
+2025-03-31 02:20:47: Found comment. Owner: 24, Attachment: 
+2025-03-31 02:20:47: Current attachment: none
+2025-03-31 02:20:47: Updating comment without attachment
+2025-03-31 02:20:47: Comment updated successfully
+2025-03-31 02:20:47: --- Edit comment request completed ---
+2025-03-31 02:21:02: --- Edit comment request started ---
+2025-03-31 02:21:02: POST data: {"comment_id":"389","content":"hello po"}
+2025-03-31 02:21:02: FILES data: []
+2025-03-31 02:21:02: Processing comment ID: 389, User ID: 24
+2025-03-31 02:21:02: Found comment. Owner: 24, Attachment: 
+2025-03-31 02:21:02: Current attachment: none
+2025-03-31 02:21:02: Updating comment with attachment: 
+2025-03-31 02:21:02: Comment updated successfully
+2025-03-31 02:21:02: --- Edit comment request completed ---
+2025-03-31 02:22:52: Edit comment request started
+2025-03-31 02:22:52: Processing comment ID: 393, User ID: 24
+2025-03-31 02:22:52: Found comment. Owner: 24, Attachment: 
+2025-03-31 02:22:52: Current attachment: none
+2025-03-31 02:22:52: Updating comment without attachment
+2025-03-31 02:22:52: Comment updated successfully
+2025-03-31 02:23:01: Edit comment request started
+2025-03-31 02:23:01: Processing comment ID: 389, User ID: 24
+2025-03-31 02:23:01: Found comment. Owner: 24, Attachment: 
+2025-03-31 02:23:01: Current attachment: none
+2025-03-31 02:23:01: Updating comment with attachment: 
+2025-03-31 02:23:01: Comment updated successfully
+2025-03-31 02:23:12: Edit comment request started
+2025-03-31 02:23:12: Processing comment ID: 389, User ID: 24
+2025-03-31 02:23:12: Found comment. Owner: 24, Attachment: 
+2025-03-31 02:23:12: Current attachment: none
+2025-03-31 02:23:12: Updating comment with attachment: 
+2025-03-31 02:23:12: Comment updated successfully

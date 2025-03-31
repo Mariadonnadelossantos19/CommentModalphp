@@ -14,6 +14,15 @@
 session_start(); // Nagsisimula ng session para sa user authentication
 require_once 'config/database.php'; // Nag-lo-load ng database connection
 
+// Check if it's an AJAX request
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+// Set header for AJAX requests
+if ($isAjax) {
+    header('Content-Type: application/json');
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) { // Nagche-check kung may user_id sa session
     header('Location: login.php');
@@ -57,8 +66,22 @@ try {
     ");
     $stmt->execute([$content, $parent_id, $user_id, $attachment]);
     
-    // Redirect back to the comments page
-    header('Location: comments.php');
+    // At the end of successful reply insertion:
+    if ($insert_result) {
+        if ($isAjax) {
+            echo json_encode(['success' => true, 'message' => 'Reply added successfully.']);
+        } else {
+            $_SESSION['success'] = "Reply added successfully.";
+            header('Location: comments.php');
+        }
+    } else {
+        if ($isAjax) {
+            echo json_encode(['success' => false, 'message' => 'Error adding reply: ' . mysqli_error($conn)]);
+        } else {
+            $_SESSION['error'] = "Error adding reply: " . mysqli_error($conn);
+            header('Location: comments.php');
+        }
+    }
     exit;
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());

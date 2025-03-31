@@ -474,4 +474,102 @@ body.in-iframe .container {
 * - comments.php (main interface)
 * - login.php (login form styling)
 * - register.php (registration form styling)
-*/ 
+*/
+
+/* Delete Modal Styling */
+.delete-modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    padding: 20px;
+    text-align: center;
+}
+
+.modal-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-cancel {
+    background-color: #f1f1f1;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-delete {
+    background-color: #f1f1f1;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-cancel:hover, .btn-delete:hover {
+    background-color: #e0e0e0;
+}
+
+/* Toast notification styling */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1100;
+}
+
+/* Success Modal Styling */
+.success-modal-content {
+    background-color: white;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    padding: 20px;
+    text-align: center;
+}
+
+.success-icon {
+    font-size: 40px;
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
+
+.btn-success {
+    background-color: #f1f1f1;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    min-width: 80px;
+}
+
+.btn-success:hover {
+    background-color: #e0e0e0;
+}
+
+#successMessage {
+    margin-bottom: 20px;
+    color: #555;
+} 

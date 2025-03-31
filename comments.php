@@ -616,22 +616,76 @@ if (isset($_SESSION['flash_message'])) {
         .nested-reply-item .reply-count:before {
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2336b9cc"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>');
         }
+        
+        /* Improved file input styling */
+        .file-input-hidden {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+        
+        .attachment-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: #4e73df;
+        }
+        
+        .attachment-label:hover {
+            background-color: #e9ecef;
+        }
+        
+        .attachment-icon {
+            margin-right: 8px;
+            font-style: normal;
+        }
+        
+        .selected-file-name {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 14px;
+            color: #6c757d;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        
+        .edit-attachment-section {
+            margin: 15px 0;
+        }
+        
+        .current-attachment {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+        }
+        
+        .delete-attachment {
+            background: none;
+            border: none;
+            color: #e74a3b;
+            font-size: 18px;
+            cursor: pointer;
+            margin-left: auto;
+        }
     </style>
 </head>
 <body class="<?php echo isset($_GET['iframe']) ? 'in-iframe' : ''; ?>">
-    <div class="navbar">
-        <div class="container">
-            <div class="user-info">
-                <div class="avatar">
-                    <?php echo strtoupper(substr($_SESSION['user_name'], 0, 1)); ?>
-                </div>
-                <span><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-            </div>
-            <div>
-                <a href="logout.php" class="btn-logout">Logout</a>
-            </div>
-        </div>
-    </div>
     <div class="container">
         <!-- Add New Comment -->
         <div class="comment-section">
@@ -768,7 +822,7 @@ if (isset($_SESSION['flash_message'])) {
                                                 </div>
 
                                                 <!-- Reply form for this specific reply -->
-                                                <div class="reply-form nested-reply-form" id="reply-form-<?php echo $reply['cmt_id']; ?>" style="display: none;">
+                                                <div class="nested-reply-form" id="reply-form-<?php echo $reply['cmt_id']; ?>" style="display: none;">
                                                     <form action="add_reply.php" method="POST" enctype="multipart/form-data">
                                                         <input type="hidden" name="parent_id" value="<?php echo $reply['cmt_id']; ?>">
                                                         <input type="hidden" name="original_comment_id" value="<?php echo $comment['cmt_id']; ?>">
@@ -836,7 +890,7 @@ if (isset($_SESSION['flash_message'])) {
                                                                 </div>
                                                                 
                                                                 <!-- Reply form for this nested reply -->
-                                                                <div class="reply-form nested-nested-reply-form" id="reply-form-<?php echo $nested_reply['cmt_id']; ?>" style="display: none;">
+                                                                <div class="nested-reply-form" id="reply-form-<?php echo $nested_reply['cmt_id']; ?>" style="display: none;">
                                                                     <form action="add_reply.php" method="POST" enctype="multipart/form-data">
                                                                         <input type="hidden" name="parent_id" value="<?php echo $reply['cmt_id']; ?>">
                                                                         <input type="hidden" name="original_comment_id" value="<?php echo $comment['cmt_id']; ?>">
@@ -866,12 +920,9 @@ if (isset($_SESSION['flash_message'])) {
     </div>
     <script src="js/comments.js"></script>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Simple Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-icon">
-                <i class="exclamation">!</i>
-            </div>
+        <div class="modal-content delete-modal-content">
             <h3 class="modal-title">Are you sure you want to delete this comment?</h3>
             <div class="modal-actions">
                 <button class="btn btn-cancel" id="cancelDelete">Cancel</button>
@@ -883,15 +934,145 @@ if (isset($_SESSION['flash_message'])) {
     <!-- Success Toast -->
     <div id="successToast" class="toast"></div>
 
-    <!-- Simple Clean Edit Modal - Exact Design Match -->
+    <!-- Edit Modal with Attachment Support -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <textarea id="editCommentText" required></textarea>
+            
+            <!-- Attachment section -->
+            <div class="edit-attachment-section">
+                <!-- Current attachment display (shown conditionally) -->
+                <div id="currentAttachment" style="display: none;">
+                    <div class="current-attachment">
+                        <span id="attachmentName"></span>
+                        <button type="button" id="deleteAttachment" class="delete-attachment">×</button>
+                    </div>
+                </div>
+                
+                <!-- New attachment upload - FIXED VERSION -->
+                <div class="attachment-upload">
+                    <label for="editAttachment" class="attachment-label">
+                        <i class="attachment-icon">📎</i> 
+                        <span>Add attachment</span>
+                    </label>
+                    <input type="file" id="editAttachment" name="cmt_attachment" accept="image/*,.pdf,.doc,.docx" class="file-input-hidden">
+                    <span id="selectedFileName" class="selected-file-name"></span>
+                </div>
+            </div>
+            
             <div class="modal-actions">
                 <button type="button" id="saveEdit" class="btn">Save</button>
                 <button type="button" id="cancelEdit" class="btn">Close</button>
             </div>
         </div>
     </div>
+
+    <!-- Success Modal for Comments/Replies -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal-content">
+            <div class="success-icon">✓</div>
+            <h3 class="modal-title">Success!</h3>
+            <p id="successMessage">Your comment has been submitted successfully.</p>
+            <div class="modal-actions">
+                <button class="btn btn-success" id="successOk">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // File input handling
+            const editAttachment = document.getElementById('editAttachment');
+            const selectedFileName = document.getElementById('selectedFileName');
+            
+            if (editAttachment && selectedFileName) {
+                editAttachment.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        selectedFileName.textContent = this.files[0].name;
+                    } else {
+                        selectedFileName.textContent = '';
+                    }
+                });
+            }
+            
+            // Debug function to help identify issues
+            function logDebug(message) {
+                console.log("[DEBUG] " + message);
+            }
+            
+            // MAIN COMMENTS - Reply button handling
+            document.querySelectorAll('.comment-item .reply').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logDebug('Main comment reply button clicked');
+                    
+                    // Hide all reply forms first
+                    document.querySelectorAll('.reply-form').forEach(form => {
+                        form.style.display = 'none';
+                    });
+                    
+                    // Show this specific reply form
+                    const commentItem = this.closest('.comment-item');
+                    const replyForm = commentItem.querySelector('.reply-form');
+                    if (replyForm) {
+                        logDebug('Showing main comment reply form');
+                        replyForm.style.display = 'block';
+                    } else {
+                        logDebug('Could not find main comment reply form');
+                    }
+                });
+            });
+            
+            // NESTED REPLIES - Reply button handling (in replies)
+            document.querySelectorAll('.reply-item .reply-button, .nested-reply-item .reply-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const replyId = this.getAttribute('data-id');
+                    logDebug('Reply button clicked for reply ID: ' + replyId);
+                    
+                    // Hide all reply forms first
+                    document.querySelectorAll('.reply-form').forEach(form => {
+                        form.style.display = 'none';
+                    });
+                    
+                    // Find and show the specific nested reply form
+                    const targetFormId = 'reply-form-' + replyId;
+                    const targetForm = document.getElementById(targetFormId);
+                    
+                    if (targetForm) {
+                        logDebug('Found nested reply form: ' + targetFormId);
+                        targetForm.style.display = 'block';
+                    } else {
+                        logDebug('Could not find nested reply form: ' + targetFormId);
+                        
+                        // Try to find it via DOM traversal as a fallback
+                        const replyItem = this.closest('.reply-item, .nested-reply-item');
+                        const nearestForm = replyItem.querySelector('.reply-form');
+                        if (nearestForm) {
+                            logDebug('Found form via DOM traversal');
+                            nearestForm.style.display = 'block';
+                        } else {
+                            logDebug('Could not find reply form via DOM traversal either');
+                        }
+                    }
+                });
+            });
+            
+            // Cancel button handling (for all reply forms)
+            document.querySelectorAll('.cancel-reply').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logDebug('Cancel button clicked');
+                    const form = this.closest('.reply-form');
+                    if (form) {
+                        form.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Add this initialization message to verify the script is running
+            logDebug('Reply system initialized successfully');
+        });
+    </script>
 </body>
 </html> 

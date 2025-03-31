@@ -15,6 +15,15 @@
 session_start(); // Nagsisimula ng session para sa user authentication
 require_once 'config/database.php'; // Nag-lo-load ng database connection
 
+// Check if it's an AJAX request
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+          strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+// Set header for AJAX requests
+if ($isAjax) {
+    header('Content-Type: application/json');
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['error'] = "You must be logged in to add comments.";
@@ -70,16 +79,24 @@ try {
               VALUES ('$content', $user_id, '$attachment', NOW())";
     
     if (mysqli_query($conn, $query)) {
-        $_SESSION['success'] = "Comment added successfully.";
+        if ($isAjax) {
+            echo json_encode(['success' => true, 'message' => 'Comment added successfully.']);
+        } else {
+            $_SESSION['success'] = "Comment added successfully.";
+            header('Location: comments.php');
+        }
     } else {
-        $_SESSION['error'] = "Error adding comment: " . mysqli_error($conn);
+        if ($isAjax) {
+            echo json_encode(['success' => false, 'message' => 'Error adding comment: ' . mysqli_error($conn)]);
+        } else {
+            $_SESSION['error'] = "Error adding comment: " . mysqli_error($conn);
+            header('Location: comments.php');
+        }
     }
     
 } catch (Exception $e) {
     $_SESSION['error'] = "Error: " . $e->getMessage();
 }
 
-// Redirect back to comments page
-header('Location: comments.php');
 exit;
 ?> 
